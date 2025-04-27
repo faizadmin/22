@@ -15,29 +15,23 @@ async def on_ready():
     print(f'Logged in as {bot.user}')
 
 @bot.command()
-async def pull(ctx, *, member_name: str):
+async def pull(ctx, member: discord.Member = None):
     author_voice = ctx.author.voice
     if not author_voice:
         await ctx.send("Tum kisi VC me nahi ho.")
         return
-    
-    target_member = None
-    for member in ctx.guild.members:
-        if member.name.lower() == member_name.lower() or member.display_name.lower() == member_name.lower():
-            target_member = member
-            break
 
-    if not target_member:
-        await ctx.send("Member nahi mila.")
+    if member is None:
+        await ctx.send("Tumhe ek member ko mention karna hoga. Example: &pull @John")
         return
 
-    if not target_member.voice:
-        await ctx.send(f"{target_member.name} VC me nahi hai.")
+    if not member.voice:
+        await ctx.send(f"{member.name} VC me nahi hai.")
         return
 
     try:
-        await target_member.move_to(author_voice.channel)
-        await ctx.send(f"{target_member.name} ko {ctx.author.name} ne tumhare VC me move kar diya gaya.")
+        await member.move_to(author_voice.channel)
+        await ctx.send(f"{member.name} ko {ctx.author.name} ne tumhare VC me move kar diya gaya.")
     except discord.Forbidden:
         await ctx.send("Bot ke paas permission nahi hai members ko move karne ki.")
     except Exception as e:
