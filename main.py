@@ -10,12 +10,40 @@ intents.members = True
 
 bot = commands.Bot(command_prefix='&', intents=intents)
 
+# Special user ID who can control the access
+special_user_id = 1176678272579424258
+access_enabled = False  # Default access is restricted to special user
+
 @bot.event
 async def on_ready():
     print(f'Logged in as {bot.user}')
 
+# Command to allow everyone to use the bot
+@bot.command()
+async def allon(ctx):
+    if ctx.author.id == special_user_id:
+        global access_enabled
+        access_enabled = True
+        await ctx.send("Bot ka use sabhi users ke liye enable kar diya gaya hai.")
+    else:
+        await ctx.send("Sirf ek specific user ko yeh command use karne ka permission hai.")
+
+# Command to restrict bot usage to only special user
+@bot.command()
+async def alloff(ctx):
+    if ctx.author.id == special_user_id:
+        global access_enabled
+        access_enabled = False
+        await ctx.send("Bot ka use sirf ek specific user ke liye restrict kar diya gaya hai.")
+    else:
+        await ctx.send("Sirf ek specific user ko yeh command use karne ka permission hai.")
+
 @bot.command()
 async def pull(ctx, member: discord.Member = None):
+    if not access_enabled and ctx.author.id != special_user_id:
+        await ctx.send("Bot ka use abhi sirf ek specific user ke liye allowed hai.")
+        return
+
     author_voice = ctx.author.voice
     if not author_voice:
         await ctx.send("Tum kisi VC me nahi ho.")
@@ -40,6 +68,10 @@ async def pull(ctx, member: discord.Member = None):
 # New moveall command to move all members
 @bot.command()
 async def moveall(ctx):
+    if not access_enabled and ctx.author.id != special_user_id:
+        await ctx.send("Bot ka use abhi sirf ek specific user ke liye allowed hai.")
+        return
+
     author_voice = ctx.author.voice
     if not author_voice:
         await ctx.send("Tum kisi VC me nahi ho.")
