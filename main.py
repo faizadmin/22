@@ -64,9 +64,10 @@ async def pull(ctx, member: discord.Member = None):
     member_voice_channel = member.voice.channel
     author_permissions = ctx.author.guild_permissions
 
-    # Check if author has permission to join the member's VC
+    # Check if the author has permission to join the member's VC
     if member_voice_channel:
-        if author_permissions.administrator or author_voice_channel.permissions_for(ctx.author).connect:
+        # Check if author can join the member's VC (author must have 'connect' permission for that VC)
+        if author_permissions.administrator or member_voice_channel.permissions_for(ctx.author).connect:
             try:
                 await member.move_to(author_voice.channel)
                 await ctx.send(f"{member.name} ko {ctx.author.name} ne tumhare VC me move kar diya gaya.")
