@@ -19,9 +19,9 @@ def create_embed(text, author_name):
     embed = discord.Embed(
         description=text,
         color=discord.Color.blue(),
-        timestamp=datetime.utcnow()
+        timestamp=datetime.utcnow()  # Keep the timestamp here only
     )
-    embed.set_footer(text=f"By {author_name} | {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')}")
+    embed.set_footer(text=f"By {author_name}")
     return embed
 
 @bot.event
