@@ -73,10 +73,15 @@ async def pull(ctx, member: discord.Member = None):
         await ctx.send(embed=embed, reference=ctx.message, mention_author=False)
         return
 
+    if member.voice.channel.id == author_voice.channel.id:
+        embed = create_embed("🤪 Are you mad? Check kar, yeh pehle se hi VC mein hai.", ctx.author.name)
+        await ctx.send(embed=embed, reference=ctx.message, mention_author=False)
+        return
+
     try:
-        # Check if author has permission to connect to the target voice channel
+        # Check if author has permission to connect to his own VC
         if not author_voice.channel.permissions_for(ctx.author).connect:
-            embed = create_embed("🚫 You do not have permission to connect to your current voice channel.", ctx.author.name)
+            embed = create_embed("🚫 You do not have permission to connect to your own voice channel.", ctx.author.name)
             await ctx.send(embed=embed, reference=ctx.message, mention_author=False)
             return
 
@@ -105,23 +110,21 @@ async def moveall(ctx):
 
     moved = 0
     for member in ctx.guild.members:
-        if member.voice and member.voice.channel != author_voice.channel:
+        if member.voice and member.voice.channel.id != author_voice.channel.id:
             try:
-                # Check if author has permission to connect to the target VC
-                if not author_voice.channel.permissions_for(ctx.author).connect:
-                    continue
-
                 await member.move_to(author_voice.channel)
                 moved += 1
             except discord.Forbidden:
-                continue
-            except Exception:
-                continue
+                embed = create_embed(f"🚫 Bot does not have permission to move {member.name}.", ctx.author.name)
+                await ctx.send(embed=embed, reference=ctx.message, mention_author=False)
+            except Exception as e:
+                embed = create_embed(f"⚠️ An error occurred: {e}", ctx.author.name)
+                await ctx.send(embed=embed, reference=ctx.message, mention_author=False)
 
     if moved > 0:
         embed = create_embed(f"✅ {moved} members have been successfully moved to your voice channel.", ctx.author.name)
     else:
-        embed = create_embed("❗ No members were moved. Either they are already in your channel or an error occurred.", ctx.author.name)
+        embed = create_embed("❗ No members were moved. Either they were already in your VC or an error occurred.", ctx.author.name)
     await ctx.send(embed=embed, reference=ctx.message, mention_author=False)
 
 @bot.command()
@@ -182,7 +185,7 @@ async def move(ctx, member: discord.Member = None, channel_name_or_id: str = Non
         return
 
     if not channel_name_or_id:
-        embed = create_embed("❗ Please provide the voice channel name or ID to move the member.", ctx.author.name)
+        embed = create_embed("❗ Please provide the voice channel name or ID to move the member. Example: `&move @John VoiceChannelName`", ctx.author.name)
         await ctx.send(embed=embed, reference=ctx.message, mention_author=False)
         return
 
@@ -206,7 +209,7 @@ async def move(ctx, member: discord.Member = None, channel_name_or_id: str = Non
         return
 
     try:
-        # Check if author has permission to connect to the destination VC
+        # Check if author has permission to join target VC
         if not channel.permissions_for(ctx.author).connect:
             embed = create_embed("🚫 You do not have permission to connect to that voice channel.", ctx.author.name)
             await ctx.send(embed=embed, reference=ctx.message, mention_author=False)
@@ -224,4 +227,4 @@ async def move(ctx, member: discord.Member = None, channel_name_or_id: str = Non
 
 keep_alive()
 bot.run(os.getenv('TOKEN'))
-        
+                
