@@ -10,11 +10,8 @@ intents.members = True
 
 bot = commands.Bot(command_prefix='&', intents=intents)
 
-# Special user ID who can control the access
 special_user_id = 1176678272579424258
-access_enabled = False  # Default access is restricted to special user
-
-# List to store role IDs that are allowed to use the bot
+access_enabled = False
 allowed_roles = []
 
 @bot.event
@@ -29,18 +26,18 @@ async def allon(ctx):
     if ctx.author.id == special_user_id:
         global access_enabled
         access_enabled = True
-        await ctx.send("✅ Bot access sabhi users ke liye successfully enable kar diya gaya hai.")
+        await ctx.send(f"{ctx.author.mention} ✅ Bot access sabhi users ke liye successfully enable kar diya gaya hai.")
     else:
-        await ctx.send("❌ Aapko is command ko execute karne ka adhikar nahi hai.")
+        await ctx.send(f"{ctx.author.mention} ❌ Aapko is command ko execute karne ka adhikar nahi hai.")
 
 @bot.command()
 async def alloff(ctx):
     if ctx.author.id == special_user_id:
         global access_enabled
         access_enabled = False
-        await ctx.send("✅ Bot access ab sirf authorized user ke liye restrict kar diya gaya hai.")
+        await ctx.send(f"{ctx.author.mention} ✅ Bot access ab sirf authorized user ke liye restrict kar diya gaya hai.")
     else:
-        await ctx.send("❌ Aapko is command ko execute karne ka adhikar nahi hai.")
+        await ctx.send(f"{ctx.author.mention} ❌ Aapko is command ko execute karne ka adhikar nahi hai.")
 
 @bot.command()
 async def pull(ctx, member: discord.Member = None):
@@ -99,17 +96,17 @@ async def moveall(ctx):
 @bot.command()
 async def permlist(ctx):
     if not allowed_roles:
-        await ctx.send("ℹ️ Abhi kisi bhi role ko bot access ki anumati nahi di gayi hai.")
+        await ctx.send(f"{ctx.author.mention} ℹ️ Abhi kisi bhi role ko bot access ki anumati nahi di gayi hai.")
     else:
         roles_list = "\n".join(
             [f"Role ID: {role_id}, Role Name: {role.name}" for role_id in allowed_roles for role in ctx.guild.roles if role.id == role_id]
         )
-        await ctx.send(f"✅ Allowed roles:\n{roles_list}")
+        await ctx.send(f"{ctx.author.mention} ✅ Allowed roles:\n{roles_list}")
 
 @bot.command()
 async def permadd(ctx, role_name_or_id: str):
     if ctx.author.id != special_user_id:
-        await ctx.send("❌ Aapko is command ko execute karne ka adhikar nahi hai.")
+        await ctx.send(f"{ctx.author.mention} ❌ Aapko is command ko execute karne ka adhikar nahi hai.")
         return
 
     role = None
@@ -121,16 +118,16 @@ async def permadd(ctx, role_name_or_id: str):
     if role:
         if role.id not in allowed_roles:
             allowed_roles.append(role.id)
-            await ctx.send(f"✅ Role '{role.name}' ko bot access ke liye authorize kar diya gaya hai.")
+            await ctx.send(f"{ctx.author.mention} ✅ Role '{role.name}' ko bot access ke liye authorize kar diya gaya hai.")
         else:
-            await ctx.send(f"ℹ️ Role '{role.name}' already authorized hai.")
+            await ctx.send(f"{ctx.author.mention} ℹ️ Role '{role.name}' already authorized hai.")
     else:
-        await ctx.send(f"❌ Role '{role_name_or_id}' server mein nahi mila.")
+        await ctx.send(f"{ctx.author.mention} ❌ Role '{role_name_or_id}' server mein nahi mila.")
 
 @bot.command()
 async def permdl(ctx, role_name_or_id: str):
     if ctx.author.id != special_user_id:
-        await ctx.send("❌ Aapko is command ko execute karne ka adhikar nahi hai.")
+        await ctx.send(f"{ctx.author.mention} ❌ Aapko is command ko execute karne ka adhikar nahi hai.")
         return
 
     role = None
@@ -142,11 +139,11 @@ async def permdl(ctx, role_name_or_id: str):
     if role:
         if role.id in allowed_roles:
             allowed_roles.remove(role.id)
-            await ctx.send(f"✅ Role '{role.name}' se bot access ki permission hata di gayi hai.")
+            await ctx.send(f"{ctx.author.mention} ✅ Role '{role.name}' se bot access ki permission hata di gayi hai.")
         else:
-            await ctx.send(f"ℹ️ Role '{role.name}' ke paas pehle se koi special permission nahi thi.")
+            await ctx.send(f"{ctx.author.mention} ℹ️ Role '{role.name}' ke paas pehle se koi special permission nahi thi.")
     else:
-        await ctx.send(f"❌ Role '{role_name_or_id}' server mein nahi mila.")
+        await ctx.send(f"{ctx.author.mention} ❌ Role '{role_name_or_id}' server mein nahi mila.")
 
 keep_alive()
 bot.run(os.getenv('TOKEN'))
