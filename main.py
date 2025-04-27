@@ -14,67 +14,70 @@ special_user_id = 1176678272579424258
 access_enabled = False
 allowed_roles = []
 
+def format_response(ctx, message, mention=True):
+    if mention:
+        return f"{ctx.author.mention} {message}"
+    else:
+        return message
+
 @bot.event
 async def on_ready():
-    print(f'✅ Logged in as {bot.user} (ID: {bot.user.id})')
-    print('------')
-    for guild in bot.guilds:
-        print(f'Connected to guild: {guild.name} (ID: {guild.id})')
+    print(f'Logged in as {bot.user}')
 
 @bot.command()
 async def allon(ctx):
     if ctx.author.id == special_user_id:
         global access_enabled
         access_enabled = True
-        await ctx.send(f"{ctx.author.mention} ✅ Bot access sabhi users ke liye successfully enable kar diya gaya hai.")
+        await ctx.send(format_response(ctx, "Bot ka use sabhi users ke liye enable kar diya gaya hai."))
     else:
-        await ctx.send(f"{ctx.author.mention} ❌ Aapko is command ko execute karne ka adhikar nahi hai.")
+        await ctx.send(format_response(ctx, "Aapko is command ka use karne ki permission nahi hai."))
 
 @bot.command()
 async def alloff(ctx):
     if ctx.author.id == special_user_id:
         global access_enabled
         access_enabled = False
-        await ctx.send(f"{ctx.author.mention} ✅ Bot access ab sirf authorized user ke liye restrict kar diya gaya hai.")
+        await ctx.send(format_response(ctx, "Bot ka use sirf specific user ke liye restrict kar diya gaya hai."))
     else:
-        await ctx.send(f"{ctx.author.mention} ❌ Aapko is command ko execute karne ka adhikar nahi hai.")
+        await ctx.send(format_response(ctx, "Aapko is command ka use karne ki permission nahi hai."))
 
 @bot.command()
 async def pull(ctx, member: discord.Member = None):
     if not access_enabled and ctx.author.id != special_user_id and not any(role.id in allowed_roles for role in ctx.author.roles):
-        await ctx.send("❌ Aapko bot ka use karne ka permission nahi hai.")
+        await ctx.send(format_response(ctx, "Bot ka use abhi sirf specific user ya authorized roles ke liye allowed hai.", mention=False))
         return
 
     author_voice = ctx.author.voice
     if not author_voice:
-        await ctx.send("⚠️ Aap kisi voice channel mein maujood nahi hain. Pehle voice channel join kijiye.")
+        await ctx.send(format_response(ctx, "Aap kisi VC me nahi ho.", mention=False))
         return
 
     if member is None:
-        await ctx.send("⚠️ Kripya karke ek member ko mention karein. Udaharan: `&pull @John`")
+        await ctx.send(format_response(ctx, "Aapko ek member ko mention karna hoga. Example: `&pull @John`", mention=False))
         return
 
     if not member.voice:
-        await ctx.send(f"⚠️ {member.name} kisi bhi voice channel mein nahi hai.")
+        await ctx.send(format_response(ctx, f"{member.name} VC me nahi hai.", mention=False))
         return
 
     try:
         await member.move_to(author_voice.channel)
-        await ctx.send(f"✅ {member.name} ko aapke voice channel mein move kar diya gaya hai.")
+        await ctx.send(format_response(ctx, f"{member.name} ko aapke VC me move kar diya gaya hai.", mention=False))
     except discord.Forbidden:
-        await ctx.send("❌ Bot ke paas members ko move karne ki required permissions nahi hain.")
+        await ctx.send(format_response(ctx, "Bot ke paas members ko move karne ki permission nahi hai.", mention=False))
     except Exception as e:
-        await ctx.send(f"❌ Ek error aayi hai: {e}")
+        await ctx.send(format_response(ctx, f"Kuch error aayi: {e}", mention=False))
 
 @bot.command()
 async def moveall(ctx):
     if not access_enabled and ctx.author.id != special_user_id and not any(role.id in allowed_roles for role in ctx.author.roles):
-        await ctx.send("❌ Aapko bot ka use karne ka permission nahi hai.")
+        await ctx.send(format_response(ctx, "Bot ka use abhi sirf specific user ya authorized roles ke liye allowed hai.", mention=False))
         return
 
     author_voice = ctx.author.voice
     if not author_voice:
-        await ctx.send("⚠️ Aap kisi voice channel mein maujood nahi hain. Pehle voice channel join kijiye.")
+        await ctx.send(format_response(ctx, "Aap kisi VC me nahi ho.", mention=False))
         return
 
     moved = 0
@@ -84,66 +87,55 @@ async def moveall(ctx):
                 await member.move_to(author_voice.channel)
                 moved += 1
             except discord.Forbidden:
-                await ctx.send(f"❌ Bot {member.name} ko move nahi kar paya due to missing permissions.")
+                await ctx.send(format_response(ctx, f"Bot ke paas {member.name} ko move karne ki permission nahi hai.", mention=False))
             except Exception as e:
-                await ctx.send(f"❌ Ek error aayi hai: {e}")
+                await ctx.send(format_response(ctx, f"Kuch error aayi: {e}", mention=False))
 
     if moved > 0:
-        await ctx.send(f"✅ {moved} members ko aapke voice channel mein move kar diya gaya hai.")
+        await ctx.send(format_response(ctx, f"{moved} members ko aapke VC me move kar diya gaya hai.", mention=False))
     else:
-        await ctx.send("⚠️ Koi members available nahi the ya ek error hui.")
+        await ctx.send(format_response(ctx, "Koi member VC me nahi tha ya koi error aayi.", mention=False))
 
 @bot.command()
 async def permlist(ctx):
     if not allowed_roles:
-        await ctx.send(f"{ctx.author.mention} ℹ️ Abhi kisi bhi role ko bot access ki anumati nahi di gayi hai.")
+        await ctx.send(format_response(ctx, "Abhi koi roles ko permission nahi di gayi hai."))
     else:
-        roles_list = "\n".join(
-            [f"Role ID: {role_id}, Role Name: {role.name}" for role_id in allowed_roles for role in ctx.guild.roles if role.id == role_id]
-        )
-        await ctx.send(f"{ctx.author.mention} ✅ Allowed roles:\n{roles_list}")
+        roles_list = "\n".join([f"Role ID: {role_id}, Role Name: {role.name}" for role_id in allowed_roles for role in ctx.guild.roles if role.id == role_id])
+        await ctx.send(format_response(ctx, f"Allowed Roles:\n{roles_list}"))
 
 @bot.command()
 async def permadd(ctx, role_name_or_id: str):
     if ctx.author.id != special_user_id:
-        await ctx.send(f"{ctx.author.mention} ❌ Aapko is command ko execute karne ka adhikar nahi hai.")
+        await ctx.send(format_response(ctx, "Aapko is command ka use karne ki permission nahi hai."))
         return
-
-    role = None
-    try:
-        role = discord.utils.get(ctx.guild.roles, name=role_name_or_id) or discord.utils.get(ctx.guild.roles, id=int(role_name_or_id))
-    except ValueError:
-        pass
-
+    
+    role = discord.utils.get(ctx.guild.roles, name=role_name_or_id) or discord.utils.get(ctx.guild.roles, id=int(role_name_or_id))
     if role:
         if role.id not in allowed_roles:
             allowed_roles.append(role.id)
-            await ctx.send(f"{ctx.author.mention} ✅ Role '{role.name}' ko bot access ke liye authorize kar diya gaya hai.")
+            await ctx.send(format_response(ctx, f"Role '{role.name}' ko bot use karne ki permission de di gayi hai."))
         else:
-            await ctx.send(f"{ctx.author.mention} ℹ️ Role '{role.name}' already authorized hai.")
+            await ctx.send(format_response(ctx, f"Role '{role.name}' already allowed hai."))
     else:
-        await ctx.send(f"{ctx.author.mention} ❌ Role '{role_name_or_id}' server mein nahi mila.")
+        await ctx.send(format_response(ctx, f"Role '{role_name_or_id}' nahi mila."))
 
 @bot.command()
 async def permdl(ctx, role_name_or_id: str):
     if ctx.author.id != special_user_id:
-        await ctx.send(f"{ctx.author.mention} ❌ Aapko is command ko execute karne ka adhikar nahi hai.")
+        await ctx.send(format_response(ctx, "Aapko is command ka use karne ki permission nahi hai."))
         return
 
-    role = None
-    try:
-        role = discord.utils.get(ctx.guild.roles, name=role_name_or_id) or discord.utils.get(ctx.guild.roles, id=int(role_name_or_id))
-    except ValueError:
-        pass
-
+    role = discord.utils.get(ctx.guild.roles, name=role_name_or_id) or discord.utils.get(ctx.guild.roles, id=int(role_name_or_id))
     if role:
         if role.id in allowed_roles:
             allowed_roles.remove(role.id)
-            await ctx.send(f"{ctx.author.mention} ✅ Role '{role.name}' se bot access ki permission hata di gayi hai.")
+            await ctx.send(format_response(ctx, f"Role '{role.name}' ko permission se hata diya gaya hai."))
         else:
-            await ctx.send(f"{ctx.author.mention} ℹ️ Role '{role.name}' ke paas pehle se koi special permission nahi thi.")
+            await ctx.send(format_response(ctx, f"Role '{role.name}' ke paas pehle se permission nahi thi."))
     else:
-        await ctx.send(f"{ctx.author.mention} ❌ Role '{role_name_or_id}' server mein nahi mila.")
+        await ctx.send(format_response(ctx, f"Role '{role_name_or_id}' nahi mila."))
 
+# Keep alive server
 keep_alive()
 bot.run(os.getenv('TOKEN'))
