@@ -37,7 +37,7 @@ async def pull(ctx, *, member_name: str):
 
     try:
         await target_member.move_to(author_voice.channel)
-        await ctx.send(f"{target_member.name} ko tumhare VC me move kar diya gaya.")
+        await ctx.send(f"{target_member.name} ko {ctx.author.name} ne tumhare VC me move kar diya gaya.")
     except discord.Forbidden:
         await ctx.send("Bot ke paas permission nahi hai members ko move karne ki.")
     except Exception as e:
@@ -63,7 +63,7 @@ async def moveall(ctx):
                 await ctx.send(f"Kuch error hua: {e}")
 
     if moved > 0:
-        await ctx.send(f"{moved} members ko tumhare VC me move kar diya gaya.")
+        await ctx.send(f"{moved} members ko {ctx.author.name} ne tumhare VC me move kar diya gaya.")
     else:
         await ctx.send("Koi member VC me nahi tha ya koi error aayi.")
 
