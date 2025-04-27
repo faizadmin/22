@@ -22,7 +22,7 @@ def create_embed(text, author):
         timestamp=datetime.utcnow()
     )
     name = author.nick if author.nick else author.name
-    embed.set_footer(text=f"Requested by {name}")
+    embed.set_footer(text=f"Requested by {name}", icon_url=author.avatar.url)  # Adding the avatar here
     return embed
 
 @bot.event
