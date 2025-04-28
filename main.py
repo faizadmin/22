@@ -17,7 +17,7 @@ allowed_roles = []
 
 def create_embed(text, author):
     embed = discord.Embed(
-        description=text,
+        description=f"**{text}**",  # Makes the main text bold for emphasis
         color=discord.Color.blue(),
         timestamp=datetime.utcnow()
     )
@@ -222,7 +222,7 @@ async def move(ctx, member: discord.Member = None, channel_name_or_id: str = Non
         return
 
     if member.voice.channel.id == channel.id:
-        embed = create_embed(f"🧠 Abe tu Thoda sa ******* Hai kya? {member.name} already us VC me hai...", ctx.author)
+        embed = create_embed(f"🧠 Abe tu Thoda sa ******* Hai kya? {member.name} already is VC me hai...", ctx.author)
         await ctx.send(embed=embed, reference=ctx.message, mention_author=False)
         return
 
