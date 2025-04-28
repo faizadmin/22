@@ -42,7 +42,7 @@ async def on_command(ctx):
     # Block help command for everyone except developer
     if ctx.command.name == "help" and ctx.author.id != special_user_id:
         await ctx.send("❌ You are not allowed to use `&help` command.", reference=ctx.message, mention_author=False)
-        raise commands.CheckFailure()
+        raise commands.CheckFailure()  # Block the help command execution
 
 @bot.command()
 async def allon(ctx):
@@ -140,11 +140,6 @@ async def moveall(ctx):
 
 @bot.command()
 async def permlist(ctx):
-    if ctx.author.id != special_user_id:
-        embed = create_embed("❌ You do not have permission to execute this command.", ctx.author)
-        await ctx.send(embed=embed, reference=ctx.message, mention_author=False)
-        return
-
     if not allowed_roles:
         embed = create_embed("📜 No roles have permission to use the bot.", ctx.author)
     else:
