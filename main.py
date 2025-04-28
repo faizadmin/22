@@ -11,7 +11,7 @@ intents.members = True
 
 bot = commands.Bot(command_prefix='&', intents=intents)
 
-special_user_id = 1176678272579424258
+special_user_id = 1176678272579424258  # <-- Aapka user id
 access_enabled = False
 allowed_roles = []
 
@@ -19,10 +19,16 @@ def create_embed(text, author_name):
     embed = discord.Embed(
         description=text,
         color=discord.Color.blue(),
-        timestamp=datetime.utcnow()  # Keep the timestamp here only
+        timestamp=datetime.utcnow()
     )
-    embed.set_footer(text=f"By {author_name}")
+    embed.set_footer(text=f"By {author_name} | {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')}")
     return embed
+
+def has_bot_access(member):
+    if access_enabled:
+        return any(role.id in allowed_roles for role in member.roles)
+    else:
+        return member.id == special_user_id
 
 @bot.event
 async def on_ready():
@@ -33,7 +39,7 @@ async def allon(ctx):
     if ctx.author.id == special_user_id:
         global access_enabled
         access_enabled = True
-        embed = create_embed("✅ Bot access has been successfully enabled for **everyone**!\n\n🤖 Developed by **Faiz**.", ctx.author.name)
+        embed = create_embed("✅ Bot access has been enabled for allowed roles only.\n\n🤖 Developed by Faiz.", ctx.author.name)
         await ctx.send(embed=embed, reference=ctx.message, mention_author=False)
     else:
         embed = create_embed("❌ You do not have permission to execute this command.", ctx.author.name)
@@ -44,7 +50,7 @@ async def alloff(ctx):
     if ctx.author.id == special_user_id:
         global access_enabled
         access_enabled = False
-        embed = create_embed("🔒 Bot access has been restricted to **authorized users only**.\n\n🛡️ Authorized person: **Faiz** (Bot Developer)", ctx.author.name)
+        embed = create_embed("🔒 Bot access is now restricted to developer only.\n\n🛡️ Authorized: Faiz", ctx.author.name)
         await ctx.send(embed=embed, reference=ctx.message, mention_author=False)
     else:
         embed = create_embed("❌ You do not have permission to execute this command.", ctx.author.name)
@@ -52,8 +58,8 @@ async def alloff(ctx):
 
 @bot.command()
 async def pull(ctx, member: discord.Member = None):
-    if not access_enabled and ctx.author.id != special_user_id and not any(role.id in allowed_roles for role in ctx.author.roles):
-        embed = create_embed("❌ Bot access is currently restricted to authorized users only.", ctx.author.name)
+    if not has_bot_access(ctx.author):
+        embed = create_embed("❌ You do not have permission to use the bot.", ctx.author.name)
         await ctx.send(embed=embed, reference=ctx.message, mention_author=False)
         return
 
@@ -73,6 +79,12 @@ async def pull(ctx, member: discord.Member = None):
         await ctx.send(embed=embed, reference=ctx.message, mention_author=False)
         return
 
+    # Check if author has permission to join his own voice channel
+    if not author_voice.channel.permissions_for(ctx.author).connect:
+        embed = create_embed("🚫 You don't have permission to join your own voice channel.", ctx.author.name)
+        await ctx.send(embed=embed, reference=ctx.message, mention_author=False)
+        return
+
     try:
         await member.move_to(author_voice.channel)
         embed = create_embed(f"✅ {member.name} has been moved to your voice channel by {ctx.author.name}.", ctx.author.name)
@@ -86,8 +98,8 @@ async def pull(ctx, member: discord.Member = None):
 
 @bot.command()
 async def moveall(ctx):
-    if not access_enabled and ctx.author.id != special_user_id and not any(role.id in allowed_roles for role in ctx.author.roles):
-        embed = create_embed("❌ Bot access is currently restricted to authorized users only.", ctx.author.name)
+    if not has_bot_access(ctx.author):
+        embed = create_embed("❌ You do not have permission to use the bot.", ctx.author.name)
         await ctx.send(embed=embed, reference=ctx.message, mention_author=False)
         return
 
@@ -99,10 +111,12 @@ async def moveall(ctx):
 
     moved = 0
     for member in ctx.guild.members:
-        if member.voice:
+        if member.voice and member.voice.channel.id != author_voice.channel.id:
             try:
-                await member.move_to(author_voice.channel)
-                moved += 1
+                # Check if author has permission to connect destination VC
+                if author_voice.channel.permissions_for(ctx.author).connect:
+                    await member.move_to(author_voice.channel)
+                    moved += 1
             except discord.Forbidden:
                 embed = create_embed(f"🚫 Bot does not have permission to move {member.name}.", ctx.author.name)
                 await ctx.send(embed=embed, reference=ctx.message, mention_author=False)
@@ -113,7 +127,7 @@ async def moveall(ctx):
     if moved > 0:
         embed = create_embed(f"✅ {moved} members have been successfully moved to your voice channel.", ctx.author.name)
     else:
-        embed = create_embed("❗ No members were found in any voice channel or an error occurred.", ctx.author.name)
+        embed = create_embed("❗ No members were moved or already in your voice channel.", ctx.author.name)
     await ctx.send(embed=embed, reference=ctx.message, mention_author=False)
 
 @bot.command()
@@ -163,8 +177,8 @@ async def permdl(ctx, role_name_or_id: str):
 
 @bot.command()
 async def move(ctx, member: discord.Member = None, channel_name_or_id: str = None):
-    if not access_enabled and ctx.author.id != special_user_id and not any(role.id in allowed_roles for role in ctx.author.roles):
-        embed = create_embed("❌ Bot access is currently restricted to authorized users only.", ctx.author.name)
+    if not has_bot_access(ctx.author):
+        embed = create_embed("❌ You do not have permission to use the bot.", ctx.author.name)
         await ctx.send(embed=embed, reference=ctx.message, mention_author=False)
         return
 
@@ -174,7 +188,7 @@ async def move(ctx, member: discord.Member = None, channel_name_or_id: str = Non
         return
 
     if not channel_name_or_id:
-        embed = create_embed("❗ Please provide the voice channel name or ID to move the member. Example: `&move @John #VoiceChannelName`", ctx.author.name)
+        embed = create_embed("❗ Please provide the voice channel name or ID to move the member.", ctx.author.name)
         await ctx.send(embed=embed, reference=ctx.message, mention_author=False)
         return
 
@@ -182,7 +196,6 @@ async def move(ctx, member: discord.Member = None, channel_name_or_id: str = Non
     channel = discord.utils.get(ctx.guild.voice_channels, name=channel_name_or_id)
     if not channel:
         try:
-            # Attempt to convert to an ID if the name doesn't work
             channel_id = int(channel_name_or_id)
             channel = discord.utils.get(ctx.guild.voice_channels, id=channel_id)
         except ValueError:
@@ -198,8 +211,12 @@ async def move(ctx, member: discord.Member = None, channel_name_or_id: str = Non
         await ctx.send(embed=embed, reference=ctx.message, mention_author=False)
         return
 
+    if not channel.permissions_for(ctx.author).connect:
+        embed = create_embed("🚫 You don't have permission to join the target voice channel.", ctx.author.name)
+        await ctx.send(embed=embed, reference=ctx.message, mention_author=False)
+        return
+
     try:
-        # Move the member to the specified channel
         await member.move_to(channel)
         embed = create_embed(f"✅ {member.name} has been moved to the voice channel '{channel.name}'.", ctx.author.name)
         await ctx.send(embed=embed, reference=ctx.message, mention_author=False)
@@ -212,4 +229,4 @@ async def move(ctx, member: discord.Member = None, channel_name_or_id: str = Non
 
 keep_alive()
 bot.run(os.getenv('TOKEN'))
-                                             
+    
