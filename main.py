@@ -44,6 +44,11 @@ async def on_command(ctx):
         await ctx.send("❌ You are not allowed to use `&help` command.", reference=ctx.message, mention_author=False)
         raise commands.CheckFailure()  # Block the help command execution
 
+# Disable the default help command
+@bot.command()
+async def help(ctx):
+    await ctx.send("❌ Default `&help` command is disabled. Please contact the developer for more information.")
+
 @bot.command()
 async def allon(ctx):
     if ctx.author.id == special_user_id:
