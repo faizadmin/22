@@ -21,10 +21,7 @@ def create_embed(text, author):
         color=discord.Color.blue(),
         timestamp=datetime.utcnow()
     )
-    embed.set_footer(
-        text=f"Requested By {author.name} | ",
-        icon_url=author.display_avatar.url
-    )
+    embed.set_footer(text=f"By {author.name} | {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')}", icon_url=author.avatar.url if author.avatar else None)
     return embed
 
 def has_bot_access(member):
@@ -37,29 +34,32 @@ def has_bot_access(member):
 async def on_ready():
     print(f'✅ Logged in as {bot.user}')
 
+# Disable default help command
+@bot.command(name="help")
+async def help_command(ctx):
+    pass
+
 @bot.command()
 async def allon(ctx):
-    if ctx.author.id != special_user_id:
+    if ctx.author.id == special_user_id:
+        global access_enabled
+        access_enabled = True
+        embed = create_embed("✅ Bot access has been enabled for allowed roles only.\n\n🤖 Developed by Faiz.", ctx.author)
+        await ctx.send(embed=embed, reference=ctx.message, mention_author=False)
+    else:
         embed = create_embed("❌ You do not have permission to execute this command.", ctx.author)
         await ctx.send(embed=embed, reference=ctx.message, mention_author=False)
-        return
-
-    global access_enabled
-    access_enabled = True
-    embed = create_embed("✅ Bot access has been enabled for allowed roles only.\n\n🤖 Developed by Faiz.", ctx.author)
-    await ctx.send(embed=embed, reference=ctx.message, mention_author=False)
 
 @bot.command()
 async def alloff(ctx):
-    if ctx.author.id != special_user_id:
+    if ctx.author.id == special_user_id:
+        global access_enabled
+        access_enabled = False
+        embed = create_embed("🔒 Bot access is now restricted to developer only.\n\n🛡️ Authorized: Faiz", ctx.author)
+        await ctx.send(embed=embed, reference=ctx.message, mention_author=False)
+    else:
         embed = create_embed("❌ You do not have permission to execute this command.", ctx.author)
         await ctx.send(embed=embed, reference=ctx.message, mention_author=False)
-        return
-
-    global access_enabled
-    access_enabled = False
-    embed = create_embed("🔒 Bot access is now restricted to developer only.\n\n🛡️ Authorized: Faiz", ctx.author)
-    await ctx.send(embed=embed, reference=ctx.message, mention_author=False)
 
 @bot.command()
 async def pull(ctx, member: discord.Member = None):
@@ -237,8 +237,6 @@ async def move(ctx, member: discord.Member = None, channel_name_or_id: str = Non
     except Exception as e:
         embed = create_embed(f"⚠️ An error occurred: {e}", ctx.author)
         await ctx.send(embed=embed, reference=ctx.message, mention_author=False)
-
-# Agar aapka khud ka help command hai to uspe bhi yahi check lagana hoga!
 
 keep_alive()
 bot.run(os.getenv('TOKEN'))
