@@ -35,13 +35,7 @@ def has_bot_access(member):
 
 @bot.event
 async def on_ready():
-    bot.remove_command("help")  # Disable the default help command
     print(f'✅ Logged in as {bot.user}')
-
-@bot.command()
-async def help(ctx):
-    embed = create_embed("❌ The help command is disabled.", ctx.author)
-    await ctx.send(embed=embed, reference=ctx.message, mention_author=False)
 
 @bot.command()
 async def allon(ctx):
