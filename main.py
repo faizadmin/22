@@ -11,7 +11,7 @@ intents.members = True
 
 bot = commands.Bot(command_prefix='&', intents=intents)
 
-special_user_id = 1176678272579424258  # <-- Aapka user id
+special_user_id = 1176678272579424258  # Developer ID
 access_enabled = False
 allowed_roles = []
 
@@ -79,9 +79,9 @@ async def pull(ctx, member: discord.Member = None):
         await ctx.send(embed=embed, reference=ctx.message, mention_author=False)
         return
 
-    # Check if author has permission to join his own voice channel
-    if not author_voice.channel.permissions_for(ctx.author).connect:
-        embed = create_embed("🚫 You don't have permission to join your own voice channel.", ctx.author.name)
+    # Check if member is already in author's VC
+    if member.voice.channel.id == author_voice.channel.id:
+        embed = create_embed(f"🧠 Abe tu Thoda sa ******* Hai kya? {member.name} already tumhare VC me hai...", ctx.author.name)
         await ctx.send(embed=embed, reference=ctx.message, mention_author=False)
         return
 
@@ -113,7 +113,6 @@ async def moveall(ctx):
     for member in ctx.guild.members:
         if member.voice and member.voice.channel.id != author_voice.channel.id:
             try:
-                # Check if author has permission to connect destination VC
                 if author_voice.channel.permissions_for(ctx.author).connect:
                     await member.move_to(author_voice.channel)
                     moved += 1
@@ -127,7 +126,7 @@ async def moveall(ctx):
     if moved > 0:
         embed = create_embed(f"✅ {moved} members have been successfully moved to your voice channel.", ctx.author.name)
     else:
-        embed = create_embed("❗ No members were moved or already in your voice channel.", ctx.author.name)
+        embed = create_embed("❗ No members were moved or they are already in your voice channel.", ctx.author.name)
     await ctx.send(embed=embed, reference=ctx.message, mention_author=False)
 
 @bot.command()
@@ -145,7 +144,7 @@ async def permadd(ctx, role_name_or_id: str):
         embed = create_embed("❌ You do not have permission to execute this command.", ctx.author.name)
         await ctx.send(embed=embed, reference=ctx.message, mention_author=False)
         return
-    
+
     role = discord.utils.get(ctx.guild.roles, name=role_name_or_id) or discord.utils.get(ctx.guild.roles, id=int(role_name_or_id))
     if role:
         if role.id not in allowed_roles:
@@ -192,12 +191,10 @@ async def move(ctx, member: discord.Member = None, channel_name_or_id: str = Non
         await ctx.send(embed=embed, reference=ctx.message, mention_author=False)
         return
 
-    # Find the channel by name or ID
     channel = discord.utils.get(ctx.guild.voice_channels, name=channel_name_or_id)
     if not channel:
         try:
-            channel_id = int(channel_name_or_id)
-            channel = discord.utils.get(ctx.guild.voice_channels, id=channel_id)
+            channel = discord.utils.get(ctx.guild.voice_channels, id=int(channel_name_or_id))
         except ValueError:
             pass
 
@@ -208,6 +205,12 @@ async def move(ctx, member: discord.Member = None, channel_name_or_id: str = Non
 
     if not member.voice:
         embed = create_embed(f"❗ {member.name} is not connected to any voice channel.", ctx.author.name)
+        await ctx.send(embed=embed, reference=ctx.message, mention_author=False)
+        return
+
+    # Check if member is already in that channel
+    if member.voice.channel.id == channel.id:
+        embed = create_embed(f"🧠 Abe tu Thoda sa ******* Hai kya? {member.name} already us VC me hai...", ctx.author.name)
         await ctx.send(embed=embed, reference=ctx.message, mention_author=False)
         return
 
@@ -229,4 +232,3 @@ async def move(ctx, member: discord.Member = None, channel_name_or_id: str = Non
 
 keep_alive()
 bot.run(os.getenv('TOKEN'))
-        
