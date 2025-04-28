@@ -37,18 +37,6 @@ def has_bot_access(member):
 async def on_ready():
     print(f'✅ Logged in as {bot.user}')
 
-@bot.event
-async def on_command(ctx):
-    # Block help command for everyone except developer
-    if ctx.command.name == "help" and ctx.author.id != special_user_id:
-        await ctx.send("❌ You are not allowed to use `&help` command.", reference=ctx.message, mention_author=False)
-        raise commands.CheckFailure()  # Block the help command execution
-
-# Disable the default help command
-@bot.command()
-async def help(ctx):
-    await ctx.send("❌ Default `&help` command is disabled. Please contact the developer for more information.")
-
 @bot.command()
 async def allon(ctx):
     if ctx.author.id == special_user_id:
@@ -144,15 +132,6 @@ async def moveall(ctx):
     await ctx.send(embed=embed, reference=ctx.message, mention_author=False)
 
 @bot.command()
-async def permlist(ctx):
-    if not allowed_roles:
-        embed = create_embed("📜 No roles have permission to use the bot.", ctx.author)
-    else:
-        roles_list = "\n".join([f"🔹 {role.name} (ID: {role.id})" for role_id in allowed_roles for role in ctx.guild.roles if role.id == role_id])
-        embed = create_embed(f"📜 Roles allowed to use the bot:\n{roles_list}", ctx.author)
-    await ctx.send(embed=embed, reference=ctx.message, mention_author=False)
-
-@bot.command()
 async def permadd(ctx, role_name_or_id: str):
     if ctx.author.id != special_user_id:
         embed = create_embed("❌ You do not have permission to execute this command.", ctx.author)
@@ -175,7 +154,7 @@ async def permadd(ctx, role_name_or_id: str):
     await ctx.send(embed=embed, reference=ctx.message, mention_author=False)
 
 @bot.command()
-async def permdl(ctx, role_name_or_id: str):
+async def permdel(ctx, role_name_or_id: str):
     if ctx.author.id != special_user_id:
         embed = create_embed("❌ You do not have permission to execute this command.", ctx.author)
         await ctx.send(embed=embed, reference=ctx.message, mention_author=False)
@@ -194,6 +173,20 @@ async def permdl(ctx, role_name_or_id: str):
             embed = create_embed(f"ℹ️ Role **{role.name}** did not have permission.", ctx.author)
     else:
         embed = create_embed(f"❗ Role '{role_name_or_id}' not found.", ctx.author)
+    await ctx.send(embed=embed, reference=ctx.message, mention_author=False)
+
+@bot.command()
+async def permlist(ctx):
+    if ctx.author.id != special_user_id:
+        embed = create_embed("❌ You do not have permission to execute this command.", ctx.author)
+        await ctx.send(embed=embed, reference=ctx.message, mention_author=False)
+        return
+
+    if not allowed_roles:
+        embed = create_embed("📜 No roles have permission to use the bot.", ctx.author)
+    else:
+        roles_list = "\n".join([f"🔹 {role.name} (ID: {role.id})" for role_id in allowed_roles for role in ctx.guild.roles if role.id == role_id])
+        embed = create_embed(f"📜 Roles allowed to use the bot:\n{roles_list}", ctx.author)
     await ctx.send(embed=embed, reference=ctx.message, mention_author=False)
 
 @bot.command()
@@ -250,4 +243,4 @@ async def move(ctx, member: discord.Member = None, channel_name_or_id: str = Non
         await ctx.send(embed=embed, reference=ctx.message, mention_author=False)
 
 keep_alive()
-bot.run(os.getenv('TOKEN'))
+bot.run(os.getenv("TOKEN"))
