@@ -22,7 +22,7 @@ def create_embed(text, author):
         timestamp=datetime.utcnow()
     )
     embed.set_footer(
-        text=f"By {author.name} | {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')}",
+        text=f"By {author.name} | ",
         icon_url=author.avatar.url if author.avatar else None
     )
     return embed
