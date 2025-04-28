@@ -22,8 +22,8 @@ def create_embed(text, author):
         timestamp=datetime.utcnow()
     )
     embed.set_footer(
-        text=f"By {author.name} | ",
-        icon_url=author.avatar.url if author.avatar else None
+        text=f"By {author.name} | {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')}",
+        icon_url=author.display_avatar.url
     )
     return embed
 
@@ -39,25 +39,27 @@ async def on_ready():
 
 @bot.command()
 async def allon(ctx):
-    if ctx.author.id == special_user_id:
-        global access_enabled
-        access_enabled = True
-        embed = create_embed("✅ Bot access has been enabled for allowed roles only.\n\n🤖 Developed by Faiz.", ctx.author)
-        await ctx.send(embed=embed, reference=ctx.message, mention_author=False)
-    else:
+    if ctx.author.id != special_user_id:
         embed = create_embed("❌ You do not have permission to execute this command.", ctx.author)
         await ctx.send(embed=embed, reference=ctx.message, mention_author=False)
+        return
+
+    global access_enabled
+    access_enabled = True
+    embed = create_embed("✅ Bot access has been enabled for allowed roles only.\n\n🤖 Developed by Faiz.", ctx.author)
+    await ctx.send(embed=embed, reference=ctx.message, mention_author=False)
 
 @bot.command()
 async def alloff(ctx):
-    if ctx.author.id == special_user_id:
-        global access_enabled
-        access_enabled = False
-        embed = create_embed("🔒 Bot access is now restricted to developer only.\n\n🛡️ Authorized: Faiz", ctx.author)
-        await ctx.send(embed=embed, reference=ctx.message, mention_author=False)
-    else:
+    if ctx.author.id != special_user_id:
         embed = create_embed("❌ You do not have permission to execute this command.", ctx.author)
         await ctx.send(embed=embed, reference=ctx.message, mention_author=False)
+        return
+
+    global access_enabled
+    access_enabled = False
+    embed = create_embed("🔒 Bot access is now restricted to developer only.\n\n🛡️ Authorized: Faiz", ctx.author)
+    await ctx.send(embed=embed, reference=ctx.message, mention_author=False)
 
 @bot.command()
 async def pull(ctx, member: discord.Member = None):
@@ -133,6 +135,11 @@ async def moveall(ctx):
 
 @bot.command()
 async def permlist(ctx):
+    if not has_bot_access(ctx.author):
+        embed = create_embed("❌ You do not have permission to use the bot.", ctx.author)
+        await ctx.send(embed=embed, reference=ctx.message, mention_author=False)
+        return
+
     if not allowed_roles:
         embed = create_embed("📜 No roles have permission to use the bot.", ctx.author)
     else:
@@ -147,11 +154,7 @@ async def permadd(ctx, role_name_or_id: str):
         await ctx.send(embed=embed, reference=ctx.message, mention_author=False)
         return
 
-    try:
-        role = discord.utils.get(ctx.guild.roles, name=role_name_or_id) or discord.utils.get(ctx.guild.roles, id=int(role_name_or_id))
-    except ValueError:
-        role = None
-
+    role = discord.utils.get(ctx.guild.roles, name=role_name_or_id) or discord.utils.get(ctx.guild.roles, id=int(role_name_or_id))
     if role:
         if role.id not in allowed_roles:
             allowed_roles.append(role.id)
@@ -169,11 +172,7 @@ async def permdl(ctx, role_name_or_id: str):
         await ctx.send(embed=embed, reference=ctx.message, mention_author=False)
         return
 
-    try:
-        role = discord.utils.get(ctx.guild.roles, name=role_name_or_id) or discord.utils.get(ctx.guild.roles, id=int(role_name_or_id))
-    except ValueError:
-        role = None
-
+    role = discord.utils.get(ctx.guild.roles, name=role_name_or_id) or discord.utils.get(ctx.guild.roles, id=int(role_name_or_id))
     if role:
         if role.id in allowed_roles:
             allowed_roles.remove(role.id)
@@ -201,10 +200,12 @@ async def move(ctx, member: discord.Member = None, channel_name_or_id: str = Non
         await ctx.send(embed=embed, reference=ctx.message, mention_author=False)
         return
 
-    try:
-        channel = discord.utils.get(ctx.guild.voice_channels, name=channel_name_or_id) or discord.utils.get(ctx.guild.voice_channels, id=int(channel_name_or_id))
-    except ValueError:
-        channel = None
+    channel = discord.utils.get(ctx.guild.voice_channels, name=channel_name_or_id)
+    if not channel:
+        try:
+            channel = discord.utils.get(ctx.guild.voice_channels, id=int(channel_name_or_id))
+        except ValueError:
+            pass
 
     if not channel:
         embed = create_embed(f"❗ No voice channel found with the name or ID '{channel_name_or_id}'.", ctx.author)
@@ -236,6 +237,8 @@ async def move(ctx, member: discord.Member = None, channel_name_or_id: str = Non
     except Exception as e:
         embed = create_embed(f"⚠️ An error occurred: {e}", ctx.author)
         await ctx.send(embed=embed, reference=ctx.message, mention_author=False)
+
+# Agar aapka khud ka help command hai to uspe bhi yahi check lagana hoga!
 
 keep_alive()
 bot.run(os.getenv('TOKEN'))
