@@ -21,7 +21,10 @@ def create_embed(text, author):
         color=discord.Color.blue(),
         timestamp=datetime.utcnow()
     )
-    embed.set_footer(text=f"By {author.name} | {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')}", icon_url=author.avatar.url if author.avatar else None)
+    embed.set_footer(
+        text=f"By {author.name} | {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')}",
+        icon_url=author.avatar.url if author.avatar else None
+    )
     return embed
 
 def has_bot_access(member):
@@ -34,10 +37,12 @@ def has_bot_access(member):
 async def on_ready():
     print(f'✅ Logged in as {bot.user}')
 
-# Disable default help command
-@bot.command(name="help")
-async def help_command(ctx):
-    pass
+@bot.event
+async def on_command(ctx):
+    # Block help command for everyone except developer
+    if ctx.command.name == "help" and ctx.author.id != special_user_id:
+        await ctx.send("❌ You are not allowed to use `&help` command.", reference=ctx.message, mention_author=False)
+        raise commands.CheckFailure()
 
 @bot.command()
 async def allon(ctx):
@@ -135,8 +140,8 @@ async def moveall(ctx):
 
 @bot.command()
 async def permlist(ctx):
-    if not has_bot_access(ctx.author):
-        embed = create_embed("❌ You do not have permission to use the bot.", ctx.author)
+    if ctx.author.id != special_user_id:
+        embed = create_embed("❌ You do not have permission to execute this command.", ctx.author)
         await ctx.send(embed=embed, reference=ctx.message, mention_author=False)
         return
 
@@ -154,7 +159,11 @@ async def permadd(ctx, role_name_or_id: str):
         await ctx.send(embed=embed, reference=ctx.message, mention_author=False)
         return
 
-    role = discord.utils.get(ctx.guild.roles, name=role_name_or_id) or discord.utils.get(ctx.guild.roles, id=int(role_name_or_id))
+    try:
+        role = discord.utils.get(ctx.guild.roles, name=role_name_or_id) or discord.utils.get(ctx.guild.roles, id=int(role_name_or_id))
+    except ValueError:
+        role = None
+
     if role:
         if role.id not in allowed_roles:
             allowed_roles.append(role.id)
@@ -172,7 +181,11 @@ async def permdl(ctx, role_name_or_id: str):
         await ctx.send(embed=embed, reference=ctx.message, mention_author=False)
         return
 
-    role = discord.utils.get(ctx.guild.roles, name=role_name_or_id) or discord.utils.get(ctx.guild.roles, id=int(role_name_or_id))
+    try:
+        role = discord.utils.get(ctx.guild.roles, name=role_name_or_id) or discord.utils.get(ctx.guild.roles, id=int(role_name_or_id))
+    except ValueError:
+        role = None
+
     if role:
         if role.id in allowed_roles:
             allowed_roles.remove(role.id)
@@ -200,12 +213,10 @@ async def move(ctx, member: discord.Member = None, channel_name_or_id: str = Non
         await ctx.send(embed=embed, reference=ctx.message, mention_author=False)
         return
 
-    channel = discord.utils.get(ctx.guild.voice_channels, name=channel_name_or_id)
-    if not channel:
-        try:
-            channel = discord.utils.get(ctx.guild.voice_channels, id=int(channel_name_or_id))
-        except ValueError:
-            pass
+    try:
+        channel = discord.utils.get(ctx.guild.voice_channels, name=channel_name_or_id) or discord.utils.get(ctx.guild.voice_channels, id=int(channel_name_or_id))
+    except ValueError:
+        channel = None
 
     if not channel:
         embed = create_embed(f"❗ No voice channel found with the name or ID '{channel_name_or_id}'.", ctx.author)
