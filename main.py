@@ -164,6 +164,20 @@ async def move(ctx, member: discord.Member = None, vc_id: int = None):
     else:
         await ctx.send(embed=create_embed("❌ VC not found with that ID.", ctx.author), reference=ctx.message, mention_author=False)
 
+# --------- LastX Commands (Access Controlled) ---------
+def make_lastx_command(x):
+    @bot.command(name=f'last{x}')
+    async def lastx(ctx):
+        if not has_bot_access(ctx.author):
+            await ctx.send(embed=create_embed("❌ Access denied.", ctx.author), reference=ctx.message, mention_author=False)
+            return
+        await ctx.send(embed=get_lastx_embed(ctx, x), reference=ctx.message, mention_author=False)
+    return lastx
+
+for i in range(1, 6):
+    make_lastx_command(i)
+
+
 @bot.command()
 async def permdl(ctx, role: discord.Role):
     if ctx.author.id != special_user_id:
