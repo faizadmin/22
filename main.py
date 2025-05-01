@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 import os
 from keep_alive import keep_alive
-from datetime import datetime, timedelta
+from datetime import datetime
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -19,13 +19,10 @@ sniped_messages = {}  # channel_id: list of deleted messages (up to 5 per channe
 
 # --------- Embed Helper ---------
 def create_embed(text, author):
-    # Use Discord's default UTC timestamp
-    current_time = datetime.utcnow()
-    
     embed = discord.Embed(
         description=f"**{text}**",
         color=discord.Color.blue(),
-        timestamp=current_time
+        timestamp=datetime.utcnow()
     )
     embed.set_footer(
         text=f"Requested By {author.name}",
@@ -39,21 +36,46 @@ def get_snipe_embed(ctx, index):
         return create_embed("❌ No deleted message found at that position.", ctx.author)
 
     data = sniped_messages[channel_id][index]
-    
-    # Use Discord's default UTC timestamp
-    sent_at = data["sent_at"]
-    deleted_at = data["deleted_at"]
-    
     embed = discord.Embed(
         title=f"🕵️ Deleted Message #{index + 1}",
         description=f"**{data['author']}** said:\n```{data['content']}```",
         color=discord.Color.orange(),
-        timestamp=deleted_at
+        timestamp=data["deleted_at"]
     )
-    embed.add_field(name="🕒 Sent At", value=sent_at.strftime('%Y-%m-%d %H:%M:%S UTC'), inline=True)
-    embed.add_field(name="❌ Deleted At", value=deleted_at.strftime('%Y-%m-%d %H:%M:%S UTC'), inline=True)
+    embed.add_field(name="🕒 Sent At", value=data["sent_at"].strftime('%Y-%m-%d %H:%M:%S UTC'), inline=True)
+    embed.add_field(name="❌ Deleted At", value=data["deleted_at"].strftime('%Y-%m-%d %H:%M:%S UTC'), inline=True)
     embed.set_footer(text=f"Requested by {ctx.author.name}", icon_url=ctx.author.avatar.url if ctx.author.avatar else None)
     return embed
+
+def has_bot_access(member):
+    if access_enabled:
+        return any(role.id in allowed_roles for role in member.roles)
+    else:
+        return member.id == special_user_id
+
+# --------- Events ---------
+@bot.event
+async def on_ready():
+    print(f'✅ Logged in as {bot.user}')
+
+@bot.event
+async def on_message_delete(message):
+    if message.author.bot:
+        return
+
+    channel_id = message.channel.id
+    if channel_id not in sniped_messages:
+        sniped_messages[channel_id] = []
+
+    sniped_messages[channel_id].insert(0, {
+        "author": message.author,
+        "content": message.content,
+        "sent_at": message.created_at,
+        "deleted_at": datetime.utcnow()
+    })
+
+    if len(sniped_messages[channel_id]) > 5:
+        sniped_messages[channel_id].pop()
 
 # --------- Voice Commands ---------
 @bot.command()
@@ -193,59 +215,38 @@ async def snipe(ctx):
     await ctx.send(embed=get_snipe_embed(ctx, 0), reference=ctx.message, mention_author=False)
 
 @bot.command()
-async def last1(ctx):
+async def last1(ctx): await ctx.send(embed=get_snipe_embed(ctx, 0), reference=ctx.message, mention_author=False)
+
+@bot.command()
+async def last2(ctx): await ctx.send(embed=get_snipe_embed(ctx, 1), reference=ctx.message, mention_author=False)
+
+@bot.command()
+async def last3(ctx): await ctx.send(embed=get_snipe_embed(ctx, 2), reference=ctx.message, mention_author=False)
+
+@bot.command()
+async def last4(ctx): await ctx.send(embed=get_snipe_embed(ctx, 3), reference=ctx.message, mention_author=False)
+
+@bot.command()
+async def last5(ctx):
     channel_id = ctx.channel.id
     if channel_id not in sniped_messages or len(sniped_messages[channel_id]) == 0:
         await ctx.send(embed=create_embed("❌ No deleted messages found.", ctx.author), reference=ctx.message, mention_author=False)
         return
     
-    # Use Discord's default UTC timestamp
-    data = sniped_messages[channel_id][0]
-    sent_at = data['sent_at']
-    deleted_at = data['deleted_at']
-
-    # Create a combined embed with the last 1 deleted message
+    # Create a combined embed with all last 5 deleted messages
     embed = discord.Embed(
-        title="🕵️ Deleted Message #1",
-        color=discord.Color.orange(),
-        timestamp=deleted_at
-    )
-    
-    embed.add_field(
-        name=f"🕵️ Deleted Message #1",
-        value=f"**{data['author']}** said:\n```{data['content']}```\n"
-              f"🕒 Sent At: {sent_at.strftime('%Y-%m-%d %H:%M:%S UTC')}\n"
-              f"❌ Deleted At: {deleted_at.strftime('%Y-%m-%d %H:%M:%S UTC')}",
-        inline=False
-    )
-    
-    embed.set_footer(text=f"Requested by {ctx.author.name}", icon_url=ctx.author.avatar.url if ctx.author.avatar else None)
-    await ctx.send(embed=embed, reference=ctx.message, mention_author=False)
-
-@bot.command()
-async def last2(ctx):
-    channel_id = ctx.channel.id
-    if channel_id not in sniped_messages or len(sniped_messages[channel_id]) < 2:
-        await ctx.send(embed=create_embed("❌ Less than 2 deleted messages found.", ctx.author), reference=ctx.message, mention_author=False)
-        return
-    
-    # Use Discord's default UTC timestamp
-    embed = discord.Embed(
-        title="🕵️ Deleted Messages #1 and #2",
+        title="🕵️ Deleted Messages",
         color=discord.Color.orange(),
         timestamp=datetime.utcnow()
     )
     
-    for i in range(2):
+    for i in range(min(5, len(sniped_messages[channel_id]))):
         data = sniped_messages[channel_id][i]
-        sent_at = data['sent_at']
-        deleted_at = data['deleted_at']
-        
         embed.add_field(
             name=f"🕵️ Deleted Message #{i + 1}",
             value=f"**{data['author']}** said:\n```{data['content']}```\n"
-                  f"🕒 Sent At: {sent_at.strftime('%Y-%m-%d %H:%M:%S UTC')}\n"
-                  f"❌ Deleted At: {deleted_at.strftime('%Y-%m-%d %H:%M:%S UTC')}",
+                  f"🕒 Sent At: {data['sent_at'].strftime('%Y-%m-%d %H:%M:%S UTC')}\n"
+                  f"❌ Deleted At: {data['deleted_at'].strftime('%Y-%m-%d %H:%M:%S UTC')}",
             inline=False
         )
     
@@ -253,64 +254,12 @@ async def last2(ctx):
     await ctx.send(embed=embed, reference=ctx.message, mention_author=False)
 
 @bot.command()
-async def last3(ctx):
-    channel_id = ctx.channel.id
-    if channel_id not in sniped_messages or len(sniped_messages[channel_id]) < 3:
-        await ctx.send(embed=create_embed("❌ Less than 3 deleted messages found.", ctx.author), reference=ctx.message, mention_author=False)
-        return
-    
-    # Use Discord's default UTC timestamp
-    embed = discord.Embed(
-        title="🕵️ Deleted Messages #1, #2, and #3",
-        color=discord.Color.orange(),
-        timestamp=datetime.utcnow()
-    )
-    
-    for i in range(3):
-        data = sniped_messages[channel_id][i]
-        sent_at = data['sent_at']
-        deleted_at = data['deleted_at']
-        
-        embed.add_field(
-            name=f"🕵️ Deleted Message #{i + 1}",
-            value=f"**{data['author']}** said:\n```{data['content']}```\n"
-                  f"🕒 Sent At: {sent_at.strftime('%Y-%m-%d %H:%M:%S UTC')}\n"
-                  f"❌ Deleted At: {deleted_at.strftime('%Y-%m-%d %H:%M:%S UTC')}",
-            inline=False
-        )
-    
-    embed.set_footer(text=f"Requested by {ctx.author.name}", icon_url=ctx.author.avatar.url if ctx.author.avatar else None)
-    await ctx.send(embed=embed, reference=ctx.message, mention_author=False)
+@commands.has_permissions(manage_messages=True)
+async def purge(ctx, amount: int):
+    await ctx.channel.purge(limit=amount + 1)  # +1 to delete the command message
+    embed = create_embed(f"🧹 Successfully deleted {amount} messages.", ctx.author)
+    await ctx.send(embed=embed, delete_after=3)
 
-@bot.command()
-async def last4(ctx):
-    channel_id = ctx.channel.id
-    if channel_id not in sniped_messages or len(sniped_messages[channel_id]) < 4:
-        await ctx.send(embed=create_embed("❌ Less than 4 deleted messages found.", ctx.author), reference=ctx.message, mention_author=False)
-        return
-    
-    # Use Discord's default UTC timestamp
-    embed = discord.Embed(
-        title="🕵️ Deleted Messages #1, #2, #3, and #4",
-        color=discord.Color.orange(),
-        timestamp=datetime.utcnow()
-    )
-    
-    for i in range(4):
-        data = sniped_messages[channel_id][i]
-        sent_at = data['sent_at']
-        deleted_at = data['deleted_at']
-        
-        embed.add_field(
-            name=f"🕵️ Deleted Message #{i + 1}",
-            value=f"**{data['author']}** said:\n```{data['content']}```\n"
-                  f"🕒 Sent At: {sent_at.strftime('%Y-%m-%d %H:%M:%S UTC')}\n"
-                  f"❌ Deleted At: {deleted_at.strftime('%Y-%m-%d %H:%M:%S UTC')}",
-            inline=False
-        )
-    
-    embed.set_footer(text=f"Requested by {ctx.author.name}", icon_url=ctx.author.avatar.url if ctx.author.avatar else None)
-    await ctx.send(embed=embed, reference=ctx.message, mention_author=False)
-
+# --------- Run ---------
 keep_alive()
-bot.run(os.getenv('DISCORD_TOKEN'))
+bot.run(os.getenv("TOKEN"))
