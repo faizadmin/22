@@ -209,26 +209,35 @@ async def permlist(ctx):
         embed = create_embed(f"📜 Roles allowed to use the bot:\n{roles_list}", ctx.author)
     await ctx.send(embed=embed, reference=ctx.message, mention_author=False)
 
-# --------- Snipe & Purge Commands ---------
+# --------- Snipe Commands ---------
 @bot.command()
-async def snipe(ctx):
-    await ctx.send(embed=get_snipe_embed(ctx, 0), reference=ctx.message, mention_author=False)
+async def snipe(ctx, index: int = 0):
+    if not has_bot_access(ctx.author):
+        await ctx.send(embed=create_embed("❌ You do not have permission to use this command.", ctx.author), reference=ctx.message, mention_author=False)
+        return
+
+    embed = get_snipe_embed(ctx, index)
+    await ctx.send(embed=embed, reference=ctx.message, mention_author=False)
 
 @bot.command()
-async def last1(ctx): await ctx.send(embed=get_snipe_embed(ctx, 0), reference=ctx.message, mention_author=False)
+async def last1(ctx):
+    await snipe(ctx, index=0)
 
 @bot.command()
-async def last2(ctx): await ctx.send(embed=get_snipe_embed(ctx, 1), reference=ctx.message, mention_author=False)
+async def last2(ctx):
+    await snipe(ctx, index=1)
 
 @bot.command()
-async def last3(ctx): await ctx.send(embed=get_snipe_embed(ctx, 2), reference=ctx.message, mention_author=False)
+async def last3(ctx):
+    await snipe(ctx, index=2)
 
 @bot.command()
-async def last4(ctx): await ctx.send(embed=get_snipe_embed(ctx, 3), reference=ctx.message, mention_author=False)
+async def last4(ctx):
+    await snipe(ctx, index=3)
 
 @bot.command()
-async def last5(ctx): await ctx.send(embed=get_snipe_embed(ctx, 4), reference=ctx.message, mention_author=False)
+async def last5(ctx):
+    await snipe(ctx, index=4)
 
-# --------- Start the Bot ---------
 keep_alive()
 bot.run(os.getenv("TOKEN"))
