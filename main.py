@@ -46,7 +46,7 @@ def get_snipe_embed(ctx, index):
 
     embed = discord.Embed(
         title=f"🕵️ Deleted Message #{index + 1}",
-        description=f"**[{author.name}](https://discord.com/users/{author.id})** said:\n```{content}```",
+        description=f"[{msg['author'].name}](https://discord.com/users/{msg['author'].id})"
         color=discord.Color.orange()
     )
     embed.add_field(name="🕒 Sent At", value=sent_at.strftime('%Y-%m-%d %H:%M:%S IST'), inline=True)
