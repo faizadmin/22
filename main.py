@@ -38,9 +38,7 @@ def get_snipe_embed(ctx, index):
     data = sniped_messages[channel_id][index]
     embed = discord.Embed(
         title=f"🕵️ Deleted Message #{index + 1}",
-        description=f"**{data['author']}** said:\n
-{data['content']}
-",
+        description=f"**{data['author']}** said:\n```{data['content']}```",
         color=discord.Color.orange(),
         timestamp=data["deleted_at"]
     )
@@ -112,7 +110,7 @@ async def pull(ctx, member: discord.Member = None):
         return
 
     if member is None:
-        await ctx.send(embed=create_embed("❗ Please mention a member to pull. Example: &pull @John", ctx.author), reference=ctx.message, mention_author=False)
+        await ctx.send(embed=create_embed("❗ Please mention a member to pull. Example: `&pull @John`", ctx.author), reference=ctx.message, mention_author=False)
         return
 
     if not member.voice:
