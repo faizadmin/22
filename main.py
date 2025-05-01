@@ -26,8 +26,13 @@ def format_ist(dt):
 
 # --------- Embed Helpers ---------
 def create_embed(text, author):
-    embed = discord.Embed(description=f"**{text}**", color=discord.Color.blue(), timestamp=get_ist_now())
-    embed.set_footer(text=f"Requested By {author.name}", icon_url=author.avatar.url if author.avatar else None)
+    ist_time = format_ist(datetime.utcnow())
+    embed = discord.Embed(
+        description=f"**{text}**",
+        color=discord.Color.blue(),
+        timestamp=datetime.utcnow()
+    )
+    embed.set_footer(text=f"{ist_time} | Requested by {author.name}", icon_url=author.avatar.url if author.avatar else None)
     return embed
 
 def has_bot_access(member):
@@ -43,15 +48,16 @@ def get_snipe_embed(ctx, index):
         return create_embed("❌ No deleted message found at that position.", ctx.author)
 
     data = sniped_messages[channel_id][index]
+    ist_time = format_ist(datetime.utcnow())
     embed = discord.Embed(
         title=f"🕵️ Deleted Message #{index + 1}",
         description=f"[{data['author'].name}](https://discord.com/users/{data['author'].id}) said:\n```{data['content']}```",
         color=discord.Color.orange(),
-        timestamp=get_ist_now()
+        timestamp=datetime.utcnow()
     )
     embed.add_field(name="🕒 Sent At", value=format_ist(data["sent_at"]), inline=True)
     embed.add_field(name="❌ Deleted At", value=format_ist(data["deleted_at"]), inline=True)
-    embed.set_footer(text=f"Requested by {ctx.author.name}", icon_url=ctx.author.avatar.url if ctx.author.avatar else None)
+    embed.set_footer(text=f"{ist_time} | Requested by {ctx.author.name}", icon_url=ctx.author.avatar.url if ctx.author.avatar else None)
     return embed
 
 def get_lastx_embed(ctx, count):
@@ -69,8 +75,9 @@ def get_lastx_embed(ctx, count):
             f"Sent At: {format_ist(data['sent_at'])}\n"
             f"Deleted At: {format_ist(data['deleted_at'])}\n"
         )
-    embed = discord.Embed(description="\n".join(lines), color=discord.Color.orange(), timestamp=get_ist_now())
-    embed.set_footer(text=f"Requested by {ctx.author.name}", icon_url=ctx.author.avatar.url if ctx.author.avatar else None)
+    ist_time = format_ist(datetime.utcnow())
+    embed = discord.Embed(description="\n".join(lines), color=discord.Color.orange(), timestamp=datetime.utcnow())
+    embed.set_footer(text=f"{ist_time} | Requested by {ctx.author.name}", icon_url=ctx.author.avatar.url if ctx.author.avatar else None)
     return embed
 
 # --------- Events ---------
@@ -188,7 +195,7 @@ async def moveall(ctx):
     if not ctx.author.voice:
         await ctx.send(embed=create_embed("❗ Join a VC first.", ctx.author), reference=ctx.message, mention_author=False)
         return
-    
+
     destination = ctx.author.voice.channel
     moved = 0
 
@@ -200,7 +207,7 @@ async def moveall(ctx):
                     moved += 1
                 except discord.Forbidden:
                     await ctx.send(embed=create_embed(f"❌ Can't move {member.name} (missing permissions).", ctx.author), reference=ctx.message, mention_author=False)
-    
+
     await ctx.send(embed=create_embed(f"✅ Moved {moved} member(s) to your VC.", ctx.author), reference=ctx.message, mention_author=False)
 
 # --------- Snipe and LastX Commands ---------
@@ -211,7 +218,7 @@ async def snipe(ctx):
         return
     await ctx.send(embed=get_snipe_embed(ctx, 0), reference=ctx.message, mention_author=False)
 
-# Fixed registration of last1 to last5 commands
+# Register last1 to last5 commands
 for i in range(1, 6):
     async def lastx(ctx, i=i):
         if not has_bot_access(ctx.author):
@@ -223,3 +230,4 @@ for i in range(1, 6):
 # --------- Start Bot ---------
 keep_alive()
 bot.run(os.getenv("TOKEN"))
+    
