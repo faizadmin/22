@@ -124,6 +124,17 @@ async def permadd(ctx, role: discord.Role):
         await ctx.send(embed=create_embed(f"ℹ️ Role '{role.name}' already in allowed list.", ctx.author), reference=ctx.message, mention_author=False)
 
 @bot.command()
+async def permdl(ctx, role: discord.Role):
+    if ctx.author.id != special_user_id:
+        await ctx.send(embed=create_embed("❌ Only developer can run this command.", ctx.author), reference=ctx.message, mention_author=False)
+        return
+    if role.id in allowed_roles:
+        allowed_roles.remove(role.id)
+        await ctx.send(embed=create_embed(f"✅ Role '{role.name}' removed from allowed list.", ctx.author), reference=ctx.message, mention_author=False)
+    else:
+        await ctx.send(embed=create_embed(f"ℹ️ Role '{role.name}' not in allowed list.", ctx.author), reference=ctx.message, mention_author=False)
+
+@bot.command()
 async def permlist(ctx):
     if ctx.author.id != special_user_id:
         await ctx.send(embed=create_embed("❌ Only developer can run this command.", ctx.author), reference=ctx.message, mention_author=False)
@@ -164,31 +175,6 @@ async def move(ctx, member: discord.Member = None, vc_id: int = None):
     else:
         await ctx.send(embed=create_embed("❌ VC not found with that ID.", ctx.author), reference=ctx.message, mention_author=False)
 
-# --------- LastX Commands (Access Controlled) ---------
-def make_lastx_command(x):
-    @bot.command(name=f'last{x}')
-    async def lastx(ctx):
-        if not has_bot_access(ctx.author):
-            await ctx.send(embed=create_embed("❌ Access denied.", ctx.author), reference=ctx.message, mention_author=False)
-            return
-        await ctx.send(embed=get_lastx_embed(ctx, x), reference=ctx.message, mention_author=False)
-    return lastx
-
-for i in range(1, 6):
-    make_lastx_command(i)
-
-
-@bot.command()
-async def permdl(ctx, role: discord.Role):
-    if ctx.author.id != special_user_id:
-        await ctx.send(embed=create_embed("❌ Only developer can run this command.", ctx.author), reference=ctx.message, mention_author=False)
-        return
-    if role.id in allowed_roles:
-        allowed_roles.remove(role.id)
-        await ctx.send(embed=create_embed(f"✅ Role '{role.name}' removed from allowed list.", ctx.author), reference=ctx.message, mention_author=False)
-    else:
-        await ctx.send(embed=create_embed(f"ℹ️ Role '{role.name}' not in allowed list.", ctx.author), reference=ctx.message, mention_author=False)
-
 @bot.command()
 async def moveall(ctx):
     if not has_bot_access(ctx.author):
@@ -212,8 +198,6 @@ async def moveall(ctx):
     
     await ctx.send(embed=create_embed(f"✅ Moved {moved} member(s) to your VC.", ctx.author), reference=ctx.message, mention_author=False)
 
-
-
 # --------- Snipe and LastX Commands ---------
 @bot.command()
 async def snipe(ctx):
@@ -222,16 +206,18 @@ async def snipe(ctx):
         return
     await ctx.send(embed=get_snipe_embed(ctx, 0), reference=ctx.message, mention_author=False)
 
-@bot.command()
-async def last1(ctx): await ctx.send(embed=get_lastx_embed(ctx, 1), reference=ctx.message, mention_author=False)
-@bot.command()
-async def last2(ctx): await ctx.send(embed=get_lastx_embed(ctx, 2), reference=ctx.message, mention_author=False)
-@bot.command()
-async def last3(ctx): await ctx.send(embed=get_lastx_embed(ctx, 3), reference=ctx.message, mention_author=False)
-@bot.command()
-async def last4(ctx): await ctx.send(embed=get_lastx_embed(ctx, 4), reference=ctx.message, mention_author=False)
-@bot.command()
-async def last5(ctx): await ctx.send(embed=get_lastx_embed(ctx, 5), reference=ctx.message, mention_author=False)
+# Dynamic last1 to last5 commands with access check
+def make_lastx_command(x):
+    @bot.command(name=f'last{x}')
+    async def lastx(ctx):
+        if not has_bot_access(ctx.author):
+            await ctx.send(embed=create_embed("❌ Access denied.", ctx.author), reference=ctx.message, mention_author=False)
+            return
+        await ctx.send(embed=get_lastx_embed(ctx, x), reference=ctx.message, mention_author=False)
+    return lastx
+
+for i in range(1, 6):
+    make_lastx_command(i)
 
 # --------- Start Bot ---------
 keep_alive()
