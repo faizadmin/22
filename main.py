@@ -139,39 +139,87 @@ async def snipe(ctx):
     await ctx.send(embed=get_snipe_embed(ctx, 0), reference=ctx.message, mention_author=False)
 
 @bot.command()
-async def last1(ctx): await snipe(ctx)
+async def last1(ctx):
+    embed = discord.Embed(title="🕵️ Last Deleted Message", color=discord.Color.orange(), timestamp=datetime.utcnow())
+    data = sniped_messages.get(ctx.channel.id, [])
+    if len(data) > 0:
+        msg = data[0]
+        embed.description = f"**[{msg['author'].name}](https://discord.com/users/{msg['author'].id}) said:**\n```{msg['content']}```"
+        embed.add_field(name="🕒 Sent At", value=msg["sent_at"].strftime('%Y-%m-%d %H:%M:%S IST'), inline=True)
+        embed.add_field(name="❌ Deleted At", value=msg["deleted_at"].strftime('%Y-%m-%d %H:%M:%S IST'), inline=True)
+    else:
+        embed.description = "❌ No deleted messages found."
+
+    embed.set_footer(text=f"Requested by {ctx.author.name}", icon_url=ctx.author.avatar.url if ctx.author.avatar else None)
+    await ctx.send(embed=embed, reference=ctx.message, mention_author=False)
 
 @bot.command()
 async def last2(ctx):
-    if not has_bot_access(ctx.author):
-        await ctx.send(embed=create_embed("❌ Access denied.", ctx.author), reference=ctx.message, mention_author=False)
-        return
-    await ctx.send(embed=get_snipe_embed(ctx, 0), reference=ctx.message, mention_author=False)
-    await ctx.send(embed=get_snipe_embed(ctx, 1), reference=ctx.message, mention_author=False)
+    embed = discord.Embed(title="🕵️ Last 2 Deleted Messages", color=discord.Color.orange(), timestamp=datetime.utcnow())
+    data = sniped_messages.get(ctx.channel.id, [])
+    if len(data) >= 2:
+        embed.description = ""
+        for i in range(2):
+            msg = data[i]
+            embed.description += f"\n**[{msg['author'].name}](https://discord.com/users/{msg['author'].id}) said:**\n```{msg['content']}```"
+            embed.add_field(name="🕒 Sent At", value=msg["sent_at"].strftime('%Y-%m-%d %H:%M:%S IST'), inline=True)
+            embed.add_field(name="❌ Deleted At", value=msg["deleted_at"].strftime('%Y-%m-%d %H:%M:%S IST'), inline=True)
+    else:
+        embed.description = "❌ Less than 2 deleted messages found."
+
+    embed.set_footer(text=f"Requested by {ctx.author.name}", icon_url=ctx.author.avatar.url if ctx.author.avatar else None)
+    await ctx.send(embed=embed, reference=ctx.message, mention_author=False)
 
 @bot.command()
 async def last3(ctx):
-    if not has_bot_access(ctx.author):
-        await ctx.send(embed=create_embed("❌ Access denied.", ctx.author), reference=ctx.message, mention_author=False)
-        return
-    for i in range(3):
-        await ctx.send(embed=get_snipe_embed(ctx, i), reference=ctx.message, mention_author=False)
+    embed = discord.Embed(title="🕵️ Last 3 Deleted Messages", color=discord.Color.orange(), timestamp=datetime.utcnow())
+    data = sniped_messages.get(ctx.channel.id, [])
+    if len(data) >= 3:
+        embed.description = ""
+        for i in range(3):
+            msg = data[i]
+            embed.description += f"\n**[{msg['author'].name}](https://discord.com/users/{msg['author'].id}) said:**\n```{msg['content']}```"
+            embed.add_field(name="🕒 Sent At", value=msg["sent_at"].strftime('%Y-%m-%d %H:%M:%S IST'), inline=True)
+            embed.add_field(name="❌ Deleted At", value=msg["deleted_at"].strftime('%Y-%m-%d %H:%M:%S IST'), inline=True)
+    else:
+        embed.description = "❌ Less than 3 deleted messages found."
+
+    embed.set_footer(text=f"Requested by {ctx.author.name}", icon_url=ctx.author.avatar.url if ctx.author.avatar else None)
+    await ctx.send(embed=embed, reference=ctx.message, mention_author=False)
 
 @bot.command()
 async def last4(ctx):
-    if not has_bot_access(ctx.author):
-        await ctx.send(embed=create_embed("❌ Access denied.", ctx.author), reference=ctx.message, mention_author=False)
-        return
-    for i in range(4):
-        await ctx.send(embed=get_snipe_embed(ctx, i), reference=ctx.message, mention_author=False)
+    embed = discord.Embed(title="🕵️ Last 4 Deleted Messages", color=discord.Color.orange(), timestamp=datetime.utcnow())
+    data = sniped_messages.get(ctx.channel.id, [])
+    if len(data) >= 4:
+        embed.description = ""
+        for i in range(4):
+            msg = data[i]
+            embed.description += f"\n**[{msg['author'].name}](https://discord.com/users/{msg['author'].id}) said:**\n```{msg['content']}```"
+            embed.add_field(name="🕒 Sent At", value=msg["sent_at"].strftime('%Y-%m-%d %H:%M:%S IST'), inline=True)
+            embed.add_field(name="❌ Deleted At", value=msg["deleted_at"].strftime('%Y-%m-%d %H:%M:%S IST'), inline=True)
+    else:
+        embed.description = "❌ Less than 4 deleted messages found."
+
+    embed.set_footer(text=f"Requested by {ctx.author.name}", icon_url=ctx.author.avatar.url if ctx.author.avatar else None)
+    await ctx.send(embed=embed, reference=ctx.message, mention_author=False)
 
 @bot.command()
 async def last5(ctx):
-    if not has_bot_access(ctx.author):
-        await ctx.send(embed=create_embed("❌ Access denied.", ctx.author), reference=ctx.message, mention_author=False)
-        return
-    for i in range(5):
-        await ctx.send(embed=get_snipe_embed(ctx, i), reference=ctx.message, mention_author=False)
+    embed = discord.Embed(title="🕵️ Last 5 Deleted Messages", color=discord.Color.orange(), timestamp=datetime.utcnow())
+    data = sniped_messages.get(ctx.channel.id, [])
+    if len(data) >= 5:
+        embed.description = ""
+        for i in range(5):
+            msg = data[i]
+            embed.description += f"\n**[{msg['author'].name}](https://discord.com/users/{msg['author'].id}) said:**\n```{msg['content']}```"
+            embed.add_field(name="🕒 Sent At", value=msg["sent_at"].strftime('%Y-%m-%d %H:%M:%S IST'), inline=True)
+            embed.add_field(name="❌ Deleted At", value=msg["deleted_at"].strftime('%Y-%m-%d %H:%M:%S IST'), inline=True)
+    else:
+        embed.description = "❌ Less than 5 deleted messages found."
+
+    embed.set_footer(text=f"Requested by {ctx.author.name}", icon_url=ctx.author.avatar.url if ctx.author.avatar else None)
+    await ctx.send(embed=embed, reference=ctx.message, mention_author=False)
 
 # ====== Access Control ======
 @bot.command()
