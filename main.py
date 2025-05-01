@@ -144,9 +144,9 @@ async def last1(ctx):
     data = sniped_messages.get(ctx.channel.id, [])
     if len(data) > 0:
         msg = data[0]
-        embed.description = f"**[{msg['author'].name}](https://discord.com/users/{msg['author'].id}) said:**\n```{msg['content']}```"
-        embed.add_field(name="🕒 Sent At", value=msg["sent_at"].strftime('%Y-%m-%d %H:%M:%S IST'), inline=True)
-        embed.add_field(name="❌ Deleted At", value=msg["deleted_at"].strftime('%Y-%m-%d %H:%M:%S IST'), inline=True)
+        embed.add_field(name=f"**[{msg['author'].name}](https://discord.com/users/{msg['author'].id}) said:**", value=f"```{msg['content']}```", inline=False)
+        embed.add_field(name="🕒 Sent At", value=msg["sent_at"].strftime('%Y-%m-%d %H:%M:%S IST'), inline=False)
+        embed.add_field(name="❌ Deleted At", value=msg["deleted_at"].strftime('%Y-%m-%d %H:%M:%S IST'), inline=False)
     else:
         embed.description = "❌ No deleted messages found."
 
@@ -158,12 +158,11 @@ async def last2(ctx):
     embed = discord.Embed(title="🕵️ Last 2 Deleted Messages", color=discord.Color.orange(), timestamp=datetime.utcnow())
     data = sniped_messages.get(ctx.channel.id, [])
     if len(data) >= 2:
-        embed.description = ""
         for i in range(2):
             msg = data[i]
-            embed.description += f"\n**[{msg['author'].name}](https://discord.com/users/{msg['author'].id}) said:**\n```{msg['content']}```"
-            embed.add_field(name="🕒 Sent At", value=msg["sent_at"].strftime('%Y-%m-%d %H:%M:%S IST'), inline=True)
-            embed.add_field(name="❌ Deleted At", value=msg["deleted_at"].strftime('%Y-%m-%d %H:%M:%S IST'), inline=True)
+            embed.add_field(name=f"**[{msg['author'].name}](https://discord.com/users/{msg['author'].id}) said:**", value=f"```{msg['content']}```", inline=False)
+            embed.add_field(name="🕒 Sent At", value=msg["sent_at"].strftime('%Y-%m-%d %H:%M:%S IST'), inline=False)
+            embed.add_field(name="❌ Deleted At", value=msg["deleted_at"].strftime('%Y-%m-%d %H:%M:%S IST'), inline=False)
     else:
         embed.description = "❌ Less than 2 deleted messages found."
 
@@ -175,12 +174,11 @@ async def last3(ctx):
     embed = discord.Embed(title="🕵️ Last 3 Deleted Messages", color=discord.Color.orange(), timestamp=datetime.utcnow())
     data = sniped_messages.get(ctx.channel.id, [])
     if len(data) >= 3:
-        embed.description = ""
         for i in range(3):
             msg = data[i]
-            embed.description += f"\n**[{msg['author'].name}](https://discord.com/users/{msg['author'].id}) said:**\n```{msg['content']}```"
-            embed.add_field(name="🕒 Sent At", value=msg["sent_at"].strftime('%Y-%m-%d %H:%M:%S IST'), inline=True)
-            embed.add_field(name="❌ Deleted At", value=msg["deleted_at"].strftime('%Y-%m-%d %H:%M:%S IST'), inline=True)
+            embed.add_field(name=f"**[{msg['author'].name}](https://discord.com/users/{msg['author'].id}) said:**", value=f"```{msg['content']}```", inline=False)
+            embed.add_field(name="🕒 Sent At", value=msg["sent_at"].strftime('%Y-%m-%d %H:%M:%S IST'), inline=False)
+            embed.add_field(name="❌ Deleted At", value=msg["deleted_at"].strftime('%Y-%m-%d %H:%M:%S IST'), inline=False)
     else:
         embed.description = "❌ Less than 3 deleted messages found."
 
@@ -192,12 +190,11 @@ async def last4(ctx):
     embed = discord.Embed(title="🕵️ Last 4 Deleted Messages", color=discord.Color.orange(), timestamp=datetime.utcnow())
     data = sniped_messages.get(ctx.channel.id, [])
     if len(data) >= 4:
-        embed.description = ""
         for i in range(4):
             msg = data[i]
-            embed.description += f"\n**[{msg['author'].name}](https://discord.com/users/{msg['author'].id}) said:**\n```{msg['content']}```"
-            embed.add_field(name="🕒 Sent At", value=msg["sent_at"].strftime('%Y-%m-%d %H:%M:%S IST'), inline=True)
-            embed.add_field(name="❌ Deleted At", value=msg["deleted_at"].strftime('%Y-%m-%d %H:%M:%S IST'), inline=True)
+            embed.add_field(name=f"**[{msg['author'].name}](https://discord.com/users/{msg['author'].id}) said:**", value=f"```{msg['content']}```", inline=False)
+            embed.add_field(name="🕒 Sent At", value=msg["sent_at"].strftime('%Y-%m-%d %H:%M:%S IST'), inline=False)
+            embed.add_field(name="❌ Deleted At", value=msg["deleted_at"].strftime('%Y-%m-%d %H:%M:%S IST'), inline=False)
     else:
         embed.description = "❌ Less than 4 deleted messages found."
 
@@ -209,12 +206,11 @@ async def last5(ctx):
     embed = discord.Embed(title="🕵️ Last 5 Deleted Messages", color=discord.Color.orange(), timestamp=datetime.utcnow())
     data = sniped_messages.get(ctx.channel.id, [])
     if len(data) >= 5:
-        embed.description = ""
         for i in range(5):
             msg = data[i]
-            embed.description += f"\n**[{msg['author'].name}](https://discord.com/users/{msg['author'].id}) said:**\n```{msg['content']}```"
-            embed.add_field(name="🕒 Sent At", value=msg["sent_at"].strftime('%Y-%m-%d %H:%M:%S IST'), inline=True)
-            embed.add_field(name="❌ Deleted At", value=msg["deleted_at"].strftime('%Y-%m-%d %H:%M:%S IST'), inline=True)
+            embed.add_field(name=f"**[{msg['author'].name}](https://discord.com/users/{msg['author'].id}) said:**", value=f"```{msg['content']}```", inline=False)
+            embed.add_field(name="🕒 Sent At", value=msg["sent_at"].strftime('%Y-%m-%d %H:%M:%S IST'), inline=False)
+            embed.add_field(name="❌ Deleted At", value=msg["deleted_at"].strftime('%Y-%m-%d %H:%M:%S IST'), inline=False)
     else:
         embed.description = "❌ Less than 5 deleted messages found."
 
