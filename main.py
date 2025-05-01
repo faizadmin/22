@@ -46,6 +46,14 @@ def get_snipe_embed(ctx, index):
     embed.add_field(name="❌ Deleted At", value=data["deleted_at"].strftime('%Y-%m-%d %H:%M:%S UTC'), inline=True)
     embed.set_footer(text=f"Requested by {ctx.author.name}", icon_url=ctx.author.avatar.url if ctx.author.avatar else None)
     return embed
+    # --------- Snipe & Purge Commands ---------
+@bot.command()
+async def snipe(ctx):  # 👈 Add this
+    await ctx.send(embed=get_snipe_embed(ctx, 0), reference=ctx.message, mention_author=False)
+
+@bot.command()
+async def last1(ctx): ...
+
 
 def get_multiple_snipes(ctx, count):
     channel_id = ctx.channel.id
