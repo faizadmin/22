@@ -27,7 +27,7 @@ def create_embed(text, author):
         color=discord.Color.blue(),
         timestamp=datetime.utcnow()
     )
-    embed.set_footer(text=f"Requested by {author.name}", icon_url=author.avatar.url if author.avatar else None)
+    embed.set_footer(text=f"Requested by {.name}", icon_url=.avatar.url if author.avatar else None)
     return embed
 
 def has_bot_access(member):
@@ -43,16 +43,27 @@ def get_snipe_embed(ctx, index):
     content = data["content"]
     sent_at = utc_to_ist(data["sent_at"])
     deleted_at = utc_to_ist(data["deleted_at"])
+embed.add_field(
+    name="👤 User",
+    value=f"[{data['author'].name}](https://discord.com/users/{data['author'].id})",
+    inline=False
+)
+embed.add_field(
+    name="💬 Message",
+    value=f"```{data['content']}```",
+    inline=False
+)
+embed.add_field(
+    name="🕒 Sent At",
+    value=data["sent_at"].strftime('%Y-%m-%d %H:%M:%S IST'),
+    inline=False
+)
+embed.add_field(
+    name="❌ Deleted At",
+    value=data["deleted_at"].strftime('%Y-%m-%d %H:%M:%S IST'),
+    inline=False
+)
 
-    embed = discord.Embed(
-        title=f"🕵️ Deleted Message #{index + 1}",
-        description=f"[{msg['author'].name}](https://discord.com/users/{msg['author'].id})"
-        color=discord.Color.orange()
-    )
-    embed.add_field(name="🕒 Sent At", value=sent_at.strftime('%Y-%m-%d %H:%M:%S IST'), inline=True)
-    embed.add_field(name="❌ Deleted At", value=deleted_at.strftime('%Y-%m-%d %H:%M:%S IST'), inline=True)
-    embed.set_footer(text=f"Requested by {ctx.author.name}", icon_url=ctx.author.avatar.url if ctx.author.avatar else None)
-    return embed
 
 @bot.event
 async def on_ready():
