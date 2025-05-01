@@ -19,8 +19,8 @@ sniped_messages = {}  # channel_id: list of deleted messages (up to 5 per channe
 
 # --------- Embed Helper ---------
 def create_embed(text, author):
-    # Convert UTC to IST (UTC + 5:30)
-    current_time = datetime.utcnow() + timedelta(hours=5, minutes=30)
+    # Use Discord's default UTC timestamp
+    current_time = datetime.utcnow()
     
     embed = discord.Embed(
         description=f"**{text}**",
@@ -40,9 +40,9 @@ def get_snipe_embed(ctx, index):
 
     data = sniped_messages[channel_id][index]
     
-    # Convert UTC to IST (UTC + 5:30)
-    sent_at = data["sent_at"] + timedelta(hours=5, minutes=30)
-    deleted_at = data["deleted_at"] + timedelta(hours=5, minutes=30)
+    # Use Discord's default UTC timestamp
+    sent_at = data["sent_at"]
+    deleted_at = data["deleted_at"]
     
     embed = discord.Embed(
         title=f"🕵️ Deleted Message #{index + 1}",
@@ -50,8 +50,8 @@ def get_snipe_embed(ctx, index):
         color=discord.Color.orange(),
         timestamp=deleted_at
     )
-    embed.add_field(name="🕒 Sent At", value=sent_at.strftime('%Y-%m-%d %H:%M:%S IST'), inline=True)
-    embed.add_field(name="❌ Deleted At", value=deleted_at.strftime('%Y-%m-%d %H:%M:%S IST'), inline=True)
+    embed.add_field(name="🕒 Sent At", value=sent_at.strftime('%Y-%m-%d %H:%M:%S UTC'), inline=True)
+    embed.add_field(name="❌ Deleted At", value=deleted_at.strftime('%Y-%m-%d %H:%M:%S UTC'), inline=True)
     embed.set_footer(text=f"Requested by {ctx.author.name}", icon_url=ctx.author.avatar.url if ctx.author.avatar else None)
     return embed
 
@@ -199,10 +199,10 @@ async def last1(ctx):
         await ctx.send(embed=create_embed("❌ No deleted messages found.", ctx.author), reference=ctx.message, mention_author=False)
         return
     
-    # Convert UTC to IST (UTC + 5:30)
+    # Use Discord's default UTC timestamp
     data = sniped_messages[channel_id][0]
-    sent_at = data['sent_at'] + timedelta(hours=5, minutes=30)
-    deleted_at = data['deleted_at'] + timedelta(hours=5, minutes=30)
+    sent_at = data['sent_at']
+    deleted_at = data['deleted_at']
 
     # Create a combined embed with the last 1 deleted message
     embed = discord.Embed(
@@ -214,8 +214,8 @@ async def last1(ctx):
     embed.add_field(
         name=f"🕵️ Deleted Message #1",
         value=f"**{data['author']}** said:\n```{data['content']}```\n"
-              f"🕒 Sent At: {sent_at.strftime('%Y-%m-%d %H:%M:%S IST')}\n"
-              f"❌ Deleted At: {deleted_at.strftime('%Y-%m-%d %H:%M:%S IST')}",
+              f"🕒 Sent At: {sent_at.strftime('%Y-%m-%d %H:%M:%S UTC')}\n"
+              f"❌ Deleted At: {deleted_at.strftime('%Y-%m-%d %H:%M:%S UTC')}",
         inline=False
     )
     
@@ -229,23 +229,23 @@ async def last2(ctx):
         await ctx.send(embed=create_embed("❌ Less than 2 deleted messages found.", ctx.author), reference=ctx.message, mention_author=False)
         return
     
-    # Convert UTC to IST (UTC + 5:30)
+    # Use Discord's default UTC timestamp
     embed = discord.Embed(
         title="🕵️ Deleted Messages #1 and #2",
         color=discord.Color.orange(),
-        timestamp=datetime.utcnow() + timedelta(hours=5, minutes=30)
+        timestamp=datetime.utcnow()
     )
     
     for i in range(2):
         data = sniped_messages[channel_id][i]
-        sent_at = data['sent_at'] + timedelta(hours=5, minutes=30)
-        deleted_at = data['deleted_at'] + timedelta(hours=5, minutes=30)
+        sent_at = data['sent_at']
+        deleted_at = data['deleted_at']
         
         embed.add_field(
             name=f"🕵️ Deleted Message #{i + 1}",
             value=f"**{data['author']}** said:\n```{data['content']}```\n"
-                  f"🕒 Sent At: {sent_at.strftime('%Y-%m-%d %H:%M:%S IST')}\n"
-                  f"❌ Deleted At: {deleted_at.strftime('%Y-%m-%d %H:%M:%S IST')}",
+                  f"🕒 Sent At: {sent_at.strftime('%Y-%m-%d %H:%M:%S UTC')}\n"
+                  f"❌ Deleted At: {deleted_at.strftime('%Y-%m-%d %H:%M:%S UTC')}",
             inline=False
         )
     
@@ -259,23 +259,23 @@ async def last3(ctx):
         await ctx.send(embed=create_embed("❌ Less than 3 deleted messages found.", ctx.author), reference=ctx.message, mention_author=False)
         return
     
-    # Convert UTC to IST (UTC + 5:30)
+    # Use Discord's default UTC timestamp
     embed = discord.Embed(
         title="🕵️ Deleted Messages #1, #2, and #3",
         color=discord.Color.orange(),
-        timestamp=datetime.utcnow() + timedelta(hours=5, minutes=30)
+        timestamp=datetime.utcnow()
     )
     
     for i in range(3):
         data = sniped_messages[channel_id][i]
-        sent_at = data['sent_at'] + timedelta(hours=5, minutes=30)
-        deleted_at = data['deleted_at'] + timedelta(hours=5, minutes=30)
+        sent_at = data['sent_at']
+        deleted_at = data['deleted_at']
         
         embed.add_field(
             name=f"🕵️ Deleted Message #{i + 1}",
             value=f"**{data['author']}** said:\n```{data['content']}```\n"
-                  f"🕒 Sent At: {sent_at.strftime('%Y-%m-%d %H:%M:%S IST')}\n"
-                  f"❌ Deleted At: {deleted_at.strftime('%Y-%m-%d %H:%M:%S IST')}",
+                  f"🕒 Sent At: {sent_at.strftime('%Y-%m-%d %H:%M:%S UTC')}\n"
+                  f"❌ Deleted At: {deleted_at.strftime('%Y-%m-%d %H:%M:%S UTC')}",
             inline=False
         )
     
@@ -289,23 +289,23 @@ async def last4(ctx):
         await ctx.send(embed=create_embed("❌ Less than 4 deleted messages found.", ctx.author), reference=ctx.message, mention_author=False)
         return
     
-    # Convert UTC to IST (UTC + 5:30)
+    # Use Discord's default UTC timestamp
     embed = discord.Embed(
         title="🕵️ Deleted Messages #1, #2, #3, and #4",
         color=discord.Color.orange(),
-        timestamp=datetime.utcnow() + timedelta(hours=5, minutes=30)
+        timestamp=datetime.utcnow()
     )
     
     for i in range(4):
         data = sniped_messages[channel_id][i]
-        sent_at = data['sent_at'] + timedelta(hours=5, minutes=30)
-        deleted_at = data['deleted_at'] + timedelta(hours=5, minutes=30)
+        sent_at = data['sent_at']
+        deleted_at = data['deleted_at']
         
         embed.add_field(
             name=f"🕵️ Deleted Message #{i + 1}",
             value=f"**{data['author']}** said:\n```{data['content']}```\n"
-                  f"🕒 Sent At: {sent_at.strftime('%Y-%m-%d %H:%M:%S IST')}\n"
-                  f"❌ Deleted At: {deleted_at.strftime('%Y-%m-%d %H:%M:%S IST')}",
+                  f"🕒 Sent At: {sent_at.strftime('%Y-%m-%d %H:%M:%S UTC')}\n"
+                  f"❌ Deleted At: {deleted_at.strftime('%Y-%m-%d %H:%M:%S UTC')}",
             inline=False
         )
     
