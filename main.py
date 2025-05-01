@@ -31,8 +31,9 @@ def create_embed(text, author):
     return embed
 
 def has_bot_access(member):
+    print(f"[ACCESS CHECK] User: {member.name} ({member.id}) | Access Enabled: {access_enabled}")
     if access_enabled:
-        return any(role.id in allowed_roles for role in member.roles)
+        return any(role.id in allowed_roles for role in member.roles) or member.id == special_user_id
     else:
         return member.id == special_user_id
 
@@ -95,18 +96,22 @@ async def on_message_delete(message):
 
 # --------- Access Control ---------
 @bot.command()
+async def idcheck(ctx):
+    await ctx.send(f"Your ID: `{ctx.author.id}`")
+
+@bot.command()
 async def allon(ctx):
+    global access_enabled
     if ctx.author.id == special_user_id:
-        global access_enabled
         access_enabled = True
         await ctx.send(embed=create_embed("✅ Bot access enabled for allowed roles.", ctx.author), reference=ctx.message, mention_author=False)
     else:
-        await ctx.send(embed=create_embed("❌ Only developer can run this command.", ctx.author), reference=ctx.message, mention_author=False)
+        await ctx.send(embed=create_embed(f"❌ Only developer can run this command. Your ID: `{ctx.author.id}`", ctx.author), reference=ctx.message, mention_author=False)
 
 @bot.command()
 async def alloff(ctx):
+    global access_enabled
     if ctx.author.id == special_user_id:
-        global access_enabled
         access_enabled = False
         await ctx.send(embed=create_embed("🔒 Bot access restricted to developer only.", ctx.author), reference=ctx.message, mention_author=False)
     else:
@@ -189,7 +194,7 @@ async def moveall(ctx):
 
     for vc in ctx.guild.voice_channels:
         for member in vc.members:
-            if member != ctx.author:
+            if member != ctx.author and member.voice:
                 try:
                     await member.move_to(destination)
                     moved += 1
@@ -206,18 +211,14 @@ async def snipe(ctx):
         return
     await ctx.send(embed=get_snipe_embed(ctx, 0), reference=ctx.message, mention_author=False)
 
-# Dynamic last1 to last5 commands with access check
-def make_lastx_command(x):
-    @bot.command(name=f'last{x}')
-    async def lastx(ctx):
+# Fixed registration of last1 to last5 commands
+for i in range(1, 6):
+    async def lastx(ctx, i=i):
         if not has_bot_access(ctx.author):
             await ctx.send(embed=create_embed("❌ Access denied.", ctx.author), reference=ctx.message, mention_author=False)
             return
-        await ctx.send(embed=get_lastx_embed(ctx, x), reference=ctx.message, mention_author=False)
-    return lastx
-
-for i in range(1, 6):
-    make_lastx_command(i)
+        await ctx.send(embed=get_lastx_embed(ctx, i), reference=ctx.message, mention_author=False)
+    bot.command(name=f'last{i}')(lastx)
 
 # --------- Start Bot ---------
 keep_alive()
