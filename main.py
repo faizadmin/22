@@ -11,17 +11,15 @@ intents.members = True
 
 bot = commands.Bot(command_prefix='&', intents=intents)
 
-special_user_id = 1176678272579424258  # Developer ID
+special_user_id = 1176678272579424258
 access_enabled = False
 allowed_roles = []
+
 sniped_messages = {}  # channel_id: list of deleted messages (up to 5 per channel)
 
-# --- Helpers ---
-def ist_now():
-    return datetime.utcnow() + timedelta(hours=5, minutes=30)
-
-def format_ist(dt):
-    return (dt + timedelta(hours=5, minutes=30)).strftime('%Y-%m-%d %H:%M:%S IST')
+# Helper to convert UTC to IST
+def utc_to_ist(utc_dt):
+    return utc_dt + timedelta(hours=5, minutes=30)
 
 def create_embed(text, author):
     embed = discord.Embed(
@@ -29,11 +27,11 @@ def create_embed(text, author):
         color=discord.Color.blue(),
         timestamp=datetime.utcnow()
     )
-    embed.set_footer(
-        text=f"Requested By {author.name}",
-        icon_url=author.avatar.url if author.avatar else None
-    )
+    embed.set_footer(text=f"Requested by {author.name}", icon_url=author.avatar.url if author.avatar else None)
     return embed
+
+def has_bot_access(member):
+    return member.id == special_user_id or (access_enabled and any(role.id in allowed_roles for role in member.roles))
 
 def get_snipe_embed(ctx, index):
     channel_id = ctx.channel.id
@@ -41,44 +39,21 @@ def get_snipe_embed(ctx, index):
         return create_embed("❌ No deleted message found at that position.", ctx.author)
 
     data = sniped_messages[channel_id][index]
+    author = data["author"]
+    content = data["content"]
+    sent_at = utc_to_ist(data["sent_at"])
+    deleted_at = utc_to_ist(data["deleted_at"])
+
     embed = discord.Embed(
         title=f"🕵️ Deleted Message #{index + 1}",
-        description=f"**[{data['author'].name}](https://discord.com/users/{data['author'].id})** said:\n```{data['content']}```",
-        color=discord.Color.orange(),
-        timestamp=data["deleted_at"]
+        description=f"**[{author.name}](https://discord.com/users/{author.id})** said:\n```{content}```",
+        color=discord.Color.orange()
     )
-    embed.add_field(name="🕒 Sent At", value=format_ist(data["sent_at"]), inline=True)
-    embed.add_field(name="❌ Deleted At", value=format_ist(data["deleted_at"]), inline=True)
+    embed.add_field(name="🕒 Sent At", value=sent_at.strftime('%Y-%m-%d %H:%M:%S IST'), inline=True)
+    embed.add_field(name="❌ Deleted At", value=deleted_at.strftime('%Y-%m-%d %H:%M:%S IST'), inline=True)
     embed.set_footer(text=f"Requested by {ctx.author.name}", icon_url=ctx.author.avatar.url if ctx.author.avatar else None)
     return embed
 
-def get_multi_snipe_embed(ctx, count):
-    channel_id = ctx.channel.id
-    if channel_id not in sniped_messages or len(sniped_messages[channel_id]) == 0:
-        return create_embed("❌ No deleted messages found.", ctx.author)
-
-    data_list = sniped_messages[channel_id][:count]
-    description = ""
-    for i, data in enumerate(data_list):
-        description += f"🕵️ **Deleted Message #{i+1}**\n"
-        description += f"**[{data['author'].name}](https://discord.com/users/{data['author'].id})** said:\n"
-        description += f"```{data['content']}```\n"
-        description += f"📅 Sent At: {format_ist(data['sent_at'])}\n"
-        description += f"❌ Deleted At: {format_ist(data['deleted_at'])}\n\n"
-
-    embed = discord.Embed(
-        title=f"🧾 Last {len(data_list)} Deleted Messages",
-        description=description,
-        color=discord.Color.dark_purple(),
-        timestamp=ist_now()
-    )
-    embed.set_footer(text=f"Requested by {ctx.author.name}", icon_url=ctx.author.avatar.url if ctx.author.avatar else None)
-    return embed
-
-def has_bot_access(member):
-    return member.id == special_user_id if not access_enabled else any(role.id in allowed_roles for role in member.roles)
-
-# --- Events ---
 @bot.event
 async def on_ready():
     print(f'✅ Logged in as {bot.user}')
@@ -89,145 +64,153 @@ async def on_message_delete(message):
         return
 
     channel_id = message.channel.id
-    sniped_messages.setdefault(channel_id, []).insert(0, {
+    if channel_id not in sniped_messages:
+        sniped_messages[channel_id] = []
+
+    sniped_messages[channel_id].insert(0, {
         "author": message.author,
         "content": message.content,
         "sent_at": message.created_at,
         "deleted_at": datetime.utcnow()
     })
+
     if len(sniped_messages[channel_id]) > 5:
         sniped_messages[channel_id].pop()
 
-# --- Commands ---
-@bot.command()
-async def allon(ctx):
-    if ctx.author.id == special_user_id:
-        global access_enabled
-        access_enabled = True
-        await ctx.send(embed=create_embed("✅ Access enabled for allowed roles only.", ctx.author), reference=ctx.message, mention_author=False)
-    else:
-        await ctx.send(embed=create_embed("❌ You do not have permission.", ctx.author), reference=ctx.message, mention_author=False)
-
-@bot.command()
-async def alloff(ctx):
-    if ctx.author.id == special_user_id:
-        global access_enabled
-        access_enabled = False
-        await ctx.send(embed=create_embed("🔒 Access now restricted to developer only.", ctx.author), reference=ctx.message, mention_author=False)
-    else:
-        await ctx.send(embed=create_embed("❌ You do not have permission.", ctx.author), reference=ctx.message, mention_author=False)
-
+# ====== Voice Commands ======
 @bot.command()
 async def pull(ctx, member: discord.Member = None):
     if not has_bot_access(ctx.author):
-        await ctx.send(embed=create_embed("❌ You do not have permission.", ctx.author), reference=ctx.message, mention_author=False)
+        await ctx.send(embed=create_embed("❌ You do not have permission to use the bot.", ctx.author), reference=ctx.message, mention_author=False)
         return
 
     if not ctx.author.voice:
         await ctx.send(embed=create_embed("🔊 You must be connected to a voice channel.", ctx.author), reference=ctx.message, mention_author=False)
         return
 
-    if not member:
-        await ctx.send(embed=create_embed("❗ Mention a member to pull.", ctx.author), reference=ctx.message, mention_author=False)
+    if not member or not member.voice:
+        await ctx.send(embed=create_embed("❗ Mention someone connected to a VC.", ctx.author), reference=ctx.message, mention_author=False)
         return
 
-    if not member.voice:
-        await ctx.send(embed=create_embed(f"{member.name} is not in any VC.", ctx.author), reference=ctx.message, mention_author=False)
+    await member.move_to(ctx.author.voice.channel)
+    await ctx.send(embed=create_embed(f"✅ Moved **{member.name}** to your VC.", ctx.author), reference=ctx.message, mention_author=False)
+
+@bot.command()
+async def move(ctx, member: discord.Member, vc_id: int):
+    if not has_bot_access(ctx.author):
+        await ctx.send(embed=create_embed("❌ You do not have permission to use the bot.", ctx.author), reference=ctx.message, mention_author=False)
         return
 
-    if member.voice.channel == ctx.author.voice.channel:
-        await ctx.send(embed=create_embed(f"🧠 {member.name} is already in your VC.", ctx.author), reference=ctx.message, mention_author=False)
+    vc = discord.utils.get(ctx.guild.voice_channels, id=vc_id)
+    if not vc:
+        await ctx.send(embed=create_embed("❗ Invalid VC ID.", ctx.author), reference=ctx.message, mention_author=False)
         return
 
-    try:
-        await member.move_to(ctx.author.voice.channel)
-        await ctx.send(embed=create_embed(f"✅ {member.name} moved to your VC.", ctx.author), reference=ctx.message, mention_author=False)
-    except discord.Forbidden:
-        await ctx.send(embed=create_embed("🚫 Bot lacks permission to move members.", ctx.author), reference=ctx.message, mention_author=False)
+    await member.move_to(vc)
+    await ctx.send(embed=create_embed(f"✅ Moved **{member.name}** to VC ID: `{vc.id}`", ctx.author), reference=ctx.message, mention_author=False)
 
 @bot.command()
 async def moveall(ctx):
     if not has_bot_access(ctx.author):
-        await ctx.send(embed=create_embed("❌ You do not have permission.", ctx.author), reference=ctx.message, mention_author=False)
+        await ctx.send(embed=create_embed("❌ You do not have permission to use the bot.", ctx.author), reference=ctx.message, mention_author=False)
         return
 
     if not ctx.author.voice:
-        await ctx.send(embed=create_embed("🔊 You must be in a VC.", ctx.author), reference=ctx.message, mention_author=False)
+        await ctx.send(embed=create_embed("🔊 You must be connected to a voice channel.", ctx.author), reference=ctx.message, mention_author=False)
         return
 
-    moved = 0
+    count = 0
     for member in ctx.guild.members:
-        if member.voice and member.voice.channel != ctx.author.voice.channel:
+        if member.voice and member.voice.channel.id != ctx.author.voice.channel.id:
             try:
                 await member.move_to(ctx.author.voice.channel)
-                moved += 1
+                count += 1
             except:
-                continue
+                pass
 
-    await ctx.send(embed=create_embed(f"✅ Moved {moved} members.", ctx.author), reference=ctx.message, mention_author=False)
+    await ctx.send(embed=create_embed(f"✅ Moved {count} members.", ctx.author), reference=ctx.message, mention_author=False)
 
-# Role management
+# ====== Snipe & LastX Commands ======
 @bot.command()
-async def permadd(ctx, role_name_or_id: str):
-    if ctx.author.id != special_user_id:
-        await ctx.send(embed=create_embed("❌ Not allowed.", ctx.author), reference=ctx.message, mention_author=False)
+async def snipe(ctx):
+    if not has_bot_access(ctx.author):
+        await ctx.send(embed=create_embed("❌ Access denied.", ctx.author), reference=ctx.message, mention_author=False)
         return
+    await ctx.send(embed=get_snipe_embed(ctx, 0), reference=ctx.message, mention_author=False)
 
-    role = discord.utils.get(ctx.guild.roles, name=role_name_or_id) or discord.utils.get(ctx.guild.roles, id=int(role_name_or_id))
-    if role:
-        if role.id not in allowed_roles:
-            allowed_roles.append(role.id)
-            await ctx.send(embed=create_embed(f"✅ Role **{role.name}** added.", ctx.author), reference=ctx.message, mention_author=False)
-        else:
-            await ctx.send(embed=create_embed(f"ℹ️ Role already added.", ctx.author), reference=ctx.message, mention_author=False)
-    else:
-        await ctx.send(embed=create_embed("❌ Role not found.", ctx.author), reference=ctx.message, mention_author=False)
+@bot.command()
+async def last1(ctx): await snipe(ctx)
+
+@bot.command()
+async def last2(ctx):
+    if not has_bot_access(ctx.author):
+        await ctx.send(embed=create_embed("❌ Access denied.", ctx.author), reference=ctx.message, mention_author=False)
+        return
+    await ctx.send(embed=get_snipe_embed(ctx, 0), reference=ctx.message, mention_author=False)
+    await ctx.send(embed=get_snipe_embed(ctx, 1), reference=ctx.message, mention_author=False)
+
+@bot.command()
+async def last3(ctx):
+    if not has_bot_access(ctx.author):
+        await ctx.send(embed=create_embed("❌ Access denied.", ctx.author), reference=ctx.message, mention_author=False)
+        return
+    for i in range(3):
+        await ctx.send(embed=get_snipe_embed(ctx, i), reference=ctx.message, mention_author=False)
+
+@bot.command()
+async def last4(ctx):
+    if not has_bot_access(ctx.author):
+        await ctx.send(embed=create_embed("❌ Access denied.", ctx.author), reference=ctx.message, mention_author=False)
+        return
+    for i in range(4):
+        await ctx.send(embed=get_snipe_embed(ctx, i), reference=ctx.message, mention_author=False)
+
+@bot.command()
+async def last5(ctx):
+    if not has_bot_access(ctx.author):
+        await ctx.send(embed=create_embed("❌ Access denied.", ctx.author), reference=ctx.message, mention_author=False)
+        return
+    for i in range(5):
+        await ctx.send(embed=get_snipe_embed(ctx, i), reference=ctx.message, mention_author=False)
+
+# ====== Access Control ======
+@bot.command()
+async def allon(ctx):
+    global access_enabled
+    if ctx.author.id == special_user_id:
+        access_enabled = True
+        await ctx.send(embed=create_embed("✅ Access enabled for allowed roles.", ctx.author), reference=ctx.message, mention_author=False)
+
+@bot.command()
+async def alloff(ctx):
+    global access_enabled
+    if ctx.author.id == special_user_id:
+        access_enabled = False
+        await ctx.send(embed=create_embed("🔒 Access restricted to developer only.", ctx.author), reference=ctx.message, mention_author=False)
+
+@bot.command()
+async def permadd(ctx, role_id: int):
+    if ctx.author.id != special_user_id:
+        return
+    if role_id not in allowed_roles:
+        allowed_roles.append(role_id)
+    await ctx.send(embed=create_embed(f"✅ Role ID {role_id} added to access list.", ctx.author), reference=ctx.message, mention_author=False)
+
+@bot.command()
+async def permdel(ctx, role_id: int):
+    if ctx.author.id != special_user_id:
+        return
+    if role_id in allowed_roles:
+        allowed_roles.remove(role_id)
+    await ctx.send(embed=create_embed(f"🗑️ Role ID {role_id} removed from access list.", ctx.author), reference=ctx.message, mention_author=False)
 
 @bot.command()
 async def permlist(ctx):
     if ctx.author.id != special_user_id:
-        await ctx.send(embed=create_embed("❌ Not allowed.", ctx.author), reference=ctx.message, mention_author=False)
         return
+    text = "\n".join([f"🔹 {rid}" for rid in allowed_roles]) or "❌ No roles allowed."
+    await ctx.send(embed=create_embed(f"Allowed Roles:\n{text}", ctx.author), reference=ctx.message, mention_author=False)
 
-    if not allowed_roles:
-        await ctx.send(embed=create_embed("📜 No roles added yet.", ctx.author), reference=ctx.message, mention_author=False)
-        return
-
-    role_names = [role.name for role in ctx.guild.roles if role.id in allowed_roles]
-    await ctx.send(embed=create_embed("📜 Allowed Roles:\n" + "\n".join(f"🔹 {r}" for r in role_names), ctx.author), reference=ctx.message, mention_author=False)
-
-@bot.command()
-async def permdel(ctx, role_name_or_id: str):
-    if ctx.author.id != special_user_id:
-        await ctx.send(embed=create_embed("❌ Not allowed.", ctx.author), reference=ctx.message, mention_author=False)
-        return
-
-    role = discord.utils.get(ctx.guild.roles, name=role_name_or_id) or discord.utils.get(ctx.guild.roles, id=int(role_name_or_id))
-    if role and role.id in allowed_roles:
-        allowed_roles.remove(role.id)
-        await ctx.send(embed=create_embed(f"✅ Removed role **{role.name}**.", ctx.author), reference=ctx.message, mention_author=False)
-    else:
-        await ctx.send(embed=create_embed("❌ Role not found or not in allowed list.", ctx.author), reference=ctx.message, mention_author=False)
-
-# Snipe and LastX Commands
-@bot.command()
-async def snipe(ctx): await ctx.send(embed=get_snipe_embed(ctx, 0), reference=ctx.message, mention_author=False)
-
-@bot.command()
-async def last1(ctx): await ctx.send(embed=get_multi_snipe_embed(ctx, 1), reference=ctx.message, mention_author=False)
-
-@bot.command()
-async def last2(ctx): await ctx.send(embed=get_multi_snipe_embed(ctx, 2), reference=ctx.message, mention_author=False)
-
-@bot.command()
-async def last3(ctx): await ctx.send(embed=get_multi_snipe_embed(ctx, 3), reference=ctx.message, mention_author=False)
-
-@bot.command()
-async def last4(ctx): await ctx.send(embed=get_multi_snipe_embed(ctx, 4), reference=ctx.message, mention_author=False)
-
-@bot.command()
-async def last5(ctx): await ctx.send(embed=get_multi_snipe_embed(ctx, 5), reference=ctx.message, mention_author=False)
-
-# Run
+# ====== Run Bot ======
 keep_alive()
 bot.run(os.getenv("TOKEN"))
