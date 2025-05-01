@@ -30,29 +30,52 @@ def create_embed(text, author):
     )
     return embed
 
-def get_snipe_embed(ctx, count):
+def get_snipe_embed(ctx, index):
     channel_id = ctx.channel.id
-    if channel_id not in sniped_messages or len(sniped_messages[channel_id]) == 0:
+    if channel_id not in sniped_messages or len(sniped_messages[channel_id]) <= index:
+        return create_embed("❌ No deleted message found at that position.", ctx.author)
+
+    data = sniped_messages[channel_id][index]
+    embed = discord.Embed(
+        title=f"🕵️ Deleted Message #{index + 1}",
+        description=(
+            f"**[{data['author'].name}](https://discord.com/users/{data['author'].id})** said:\n"
+            f"```{data['content']}```"
+        ),
+        color=discord.Color.orange(),
+        timestamp=data["deleted_at"]
+    )
+    embed.add_field(name="🕒 Sent At", value=data["sent_at"].strftime('%Y-%m-%d %H:%M:%S UTC'), inline=True)
+    embed.add_field(name="❌ Deleted At", value=data["deleted_at"].strftime('%Y-%m-%d %H:%M:%S UTC'), inline=True)
+    embed.set_footer(text=f"Requested by {ctx.author.name}", icon_url=ctx.author.avatar.url if ctx.author.avatar else None)
+    return embed
+
+def get_multi_snipe_embed(ctx, count):
+    channel_id = ctx.channel.id
+    if channel_id not in sniped_messages:
         return create_embed("❌ No deleted messages found.", ctx.author)
 
     messages = sniped_messages[channel_id][:count]
+    if not messages:
+        return create_embed("❌ No deleted messages found.", ctx.author)
+
+    description = ""
+    for i, data in enumerate(messages):
+        description += (
+            f"🕵️ **Deleted Message #{i + 1}**\n"
+            f"**[{data['author'].name}](https://discord.com/users/{data['author'].id})** said:\n"
+            f"```{data['content']}```\n"
+            f"🕒 Sent At: {data['sent_at'].strftime('%Y-%m-%d %H:%M:%S UTC')}\n"
+            f"❌ Deleted At: {data['deleted_at'].strftime('%Y-%m-%d %H:%M:%S UTC')}\n\n"
+        )
+
     embed = discord.Embed(
-        title=f"🕵️ Last {count} Deleted Messages",
+        title=f"🕵️ Last {len(messages)} Deleted Message(s)",
+        description=description.strip(),
         color=discord.Color.orange(),
         timestamp=datetime.utcnow()
     )
-    for idx, data in enumerate(messages):
-        embed.add_field(
-            name=f"Deleted Message #{idx + 1}",
-            value=f"**{data['author'].name}** said:\n```{data['content']}```\n"
-                  f"Sent At: {data['sent_at'].strftime('%Y-%m-%d %H:%M:%S UTC')}\n"
-                  f"Deleted At: {data['deleted_at'].strftime('%Y-%m-%d %H:%M:%S UTC')}",
-            inline=False
-        )
-        embed.set_footer(
-            text=f"Requested by {ctx.author.name}",
-            icon_url=ctx.author.avatar.url if ctx.author.avatar else None
-        )
+    embed.set_footer(text=f"Requested by {ctx.author.name}", icon_url=ctx.author.avatar.url if ctx.author.avatar else None)
     return embed
 
 def has_bot_access(member):
@@ -219,33 +242,24 @@ async def permlist(ctx):
 
 # --------- Snipe Commands ---------
 @bot.command()
-async def snipe(ctx, count: int = 1):
-    if not has_bot_access(ctx.author):
-        await ctx.send(embed=create_embed("❌ You do not have permission to use this command.", ctx.author), reference=ctx.message, mention_author=False)
-        return
-
-    embed = get_snipe_embed(ctx, count)
-    await ctx.send(embed=embed, reference=ctx.message, mention_author=False)
+async def snipe(ctx):
+    await ctx.send(embed=get_snipe_embed(ctx, 0), reference=ctx.message, mention_author=False)
 
 @bot.command()
-async def last1(ctx):
-    await snipe(ctx, count=1)
+async def last1(ctx): await ctx.send(embed=get_multi_snipe_embed(ctx, 1), reference=ctx.message, mention_author=False)
 
 @bot.command()
-async def last2(ctx):
-    await snipe(ctx, count=2)
+async def last2(ctx): await ctx.send(embed=get_multi_snipe_embed(ctx, 2), reference=ctx.message, mention_author=False)
 
 @bot.command()
-async def last3(ctx):
-    await snipe(ctx, count=3)
+async def last3(ctx): await ctx.send(embed=get_multi_snipe_embed(ctx, 3), reference=ctx.message, mention_author=False)
 
 @bot.command()
-async def last4(ctx):
-    await snipe(ctx, count=4)
+async def last4(ctx): await ctx.send(embed=get_multi_snipe_embed(ctx, 4), reference=ctx.message, mention_author=False)
 
 @bot.command()
-async def last5(ctx):
-    await snipe(ctx, count=5)
+async def last5(ctx): await ctx.send(embed=get_multi_snipe_embed(ctx, 5), reference=ctx.message, mention_author=False)
 
+# --------- Start the Bot ---------
 keep_alive()
 bot.run(os.getenv("TOKEN"))
