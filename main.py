@@ -2,8 +2,7 @@ import discord
 from discord.ext import commands
 import os
 from keep_alive import keep_alive
-from datetime import datetime
-import pytz
+from datetime import datetime, timedelta
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -18,13 +17,10 @@ allowed_roles = []
 
 sniped_messages = {}  # channel_id: list of deleted messages (up to 5 per channel)
 
-# IST timezone setup
-IST = pytz.timezone("Asia/Kolkata")
-
 # --------- Embed Helper ---------
 def create_embed(text, author):
-    # Convert to IST
-    current_time = datetime.now(IST)
+    # Convert UTC to IST (UTC + 5:30)
+    current_time = datetime.utcnow() + timedelta(hours=5, minutes=30)
     
     embed = discord.Embed(
         description=f"**{text}**",
@@ -44,9 +40,9 @@ def get_snipe_embed(ctx, index):
 
     data = sniped_messages[channel_id][index]
     
-    # Convert to IST
-    sent_at = data["sent_at"].astimezone(IST)
-    deleted_at = data["deleted_at"].astimezone(IST)
+    # Convert UTC to IST (UTC + 5:30)
+    sent_at = data["sent_at"] + timedelta(hours=5, minutes=30)
+    deleted_at = data["deleted_at"] + timedelta(hours=5, minutes=30)
     
     embed = discord.Embed(
         title=f"🕵️ Deleted Message #{index + 1}",
@@ -203,10 +199,10 @@ async def last1(ctx):
         await ctx.send(embed=create_embed("❌ No deleted messages found.", ctx.author), reference=ctx.message, mention_author=False)
         return
     
-    # Convert to IST
+    # Convert UTC to IST (UTC + 5:30)
     data = sniped_messages[channel_id][0]
-    sent_at = data['sent_at'].astimezone(IST)
-    deleted_at = data['deleted_at'].astimezone(IST)
+    sent_at = data['sent_at'] + timedelta(hours=5, minutes=30)
+    deleted_at = data['deleted_at'] + timedelta(hours=5, minutes=30)
 
     # Create a combined embed with the last 1 deleted message
     embed = discord.Embed(
@@ -233,17 +229,17 @@ async def last2(ctx):
         await ctx.send(embed=create_embed("❌ Less than 2 deleted messages found.", ctx.author), reference=ctx.message, mention_author=False)
         return
     
-    # Convert to IST
+    # Convert UTC to IST (UTC + 5:30)
     embed = discord.Embed(
         title="🕵️ Deleted Messages #1 and #2",
         color=discord.Color.orange(),
-        timestamp=datetime.now(IST)
+        timestamp=datetime.utcnow() + timedelta(hours=5, minutes=30)
     )
     
     for i in range(2):
         data = sniped_messages[channel_id][i]
-        sent_at = data['sent_at'].astimezone(IST)
-        deleted_at = data['deleted_at'].astimezone(IST)
+        sent_at = data['sent_at'] + timedelta(hours=5, minutes=30)
+        deleted_at = data['deleted_at'] + timedelta(hours=5, minutes=30)
         
         embed.add_field(
             name=f"🕵️ Deleted Message #{i + 1}",
@@ -263,17 +259,17 @@ async def last3(ctx):
         await ctx.send(embed=create_embed("❌ Less than 3 deleted messages found.", ctx.author), reference=ctx.message, mention_author=False)
         return
     
-    # Convert to IST
+    # Convert UTC to IST (UTC + 5:30)
     embed = discord.Embed(
         title="🕵️ Deleted Messages #1, #2, and #3",
         color=discord.Color.orange(),
-        timestamp=datetime.now(IST)
+        timestamp=datetime.utcnow() + timedelta(hours=5, minutes=30)
     )
     
     for i in range(3):
         data = sniped_messages[channel_id][i]
-        sent_at = data['sent_at'].astimezone(IST)
-        deleted_at = data['deleted_at'].astimezone(IST)
+        sent_at = data['sent_at'] + timedelta(hours=5, minutes=30)
+        deleted_at = data['deleted_at'] + timedelta(hours=5, minutes=30)
         
         embed.add_field(
             name=f"🕵️ Deleted Message #{i + 1}",
@@ -293,17 +289,17 @@ async def last4(ctx):
         await ctx.send(embed=create_embed("❌ Less than 4 deleted messages found.", ctx.author), reference=ctx.message, mention_author=False)
         return
     
-    # Convert to IST
+    # Convert UTC to IST (UTC + 5:30)
     embed = discord.Embed(
         title="🕵️ Deleted Messages #1, #2, #3, and #4",
         color=discord.Color.orange(),
-        timestamp=datetime.now(IST)
+        timestamp=datetime.utcnow() + timedelta(hours=5, minutes=30)
     )
     
     for i in range(4):
         data = sniped_messages[channel_id][i]
-        sent_at = data['sent_at'].astimezone(IST)
-        deleted_at = data['deleted_at'].astimezone(IST)
+        sent_at = data['sent_at'] + timedelta(hours=5, minutes=30)
+        deleted_at = data['deleted_at'] + timedelta(hours=5, minutes=30)
         
         embed.add_field(
             name=f"🕵️ Deleted Message #{i + 1}",
