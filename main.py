@@ -57,7 +57,7 @@ def get_snipe_embed(ctx, index):
     )
     embed.add_field(name="🕒 Sent At", value=format_ist(data["sent_at"]), inline=True)
     embed.add_field(name="❌ Deleted At", value=format_ist(data["deleted_at"]), inline=True)
-    embed.set_footer(text=f"{ist_time} | Requested by {ctx.author.name}", icon_url=ctx.author.avatar.url if ctx.author.avatar else None)
+    embed.set_footer(text=f" | Requested by {ctx.author.name}", icon_url=ctx.author.avatar.url if ctx.author.avatar else None)
     return embed
 
 def get_lastx_embed(ctx, count):
