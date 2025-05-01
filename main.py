@@ -164,6 +164,42 @@ async def move(ctx, member: discord.Member = None, vc_id: int = None):
     else:
         await ctx.send(embed=create_embed("❌ VC not found with that ID.", ctx.author), reference=ctx.message, mention_author=False)
 
+@bot.command()
+async def permdl(ctx, role: discord.Role):
+    if ctx.author.id != special_user_id:
+        await ctx.send(embed=create_embed("❌ Only developer can run this command.", ctx.author), reference=ctx.message, mention_author=False)
+        return
+    if role.id in allowed_roles:
+        allowed_roles.remove(role.id)
+        await ctx.send(embed=create_embed(f"✅ Role '{role.name}' removed from allowed list.", ctx.author), reference=ctx.message, mention_author=False)
+    else:
+        await ctx.send(embed=create_embed(f"ℹ️ Role '{role.name}' not in allowed list.", ctx.author), reference=ctx.message, mention_author=False)
+
+@bot.command()
+async def moveall(ctx):
+    if not has_bot_access(ctx.author):
+        await ctx.send(embed=create_embed("❌ You do not have permission.", ctx.author), reference=ctx.message, mention_author=False)
+        return
+    if not ctx.author.voice:
+        await ctx.send(embed=create_embed("❗ Join a VC first.", ctx.author), reference=ctx.message, mention_author=False)
+        return
+    
+    destination = ctx.author.voice.channel
+    moved = 0
+
+    for vc in ctx.guild.voice_channels:
+        for member in vc.members:
+            if member != ctx.author:
+                try:
+                    await member.move_to(destination)
+                    moved += 1
+                except discord.Forbidden:
+                    await ctx.send(embed=create_embed(f"❌ Can't move {member.name} (missing permissions).", ctx.author), reference=ctx.message, mention_author=False)
+    
+    await ctx.send(embed=create_embed(f"✅ Moved {moved} member(s) to your VC.", ctx.author), reference=ctx.message, mention_author=False)
+
+
+
 # --------- Snipe and LastX Commands ---------
 @bot.command()
 async def snipe(ctx):
