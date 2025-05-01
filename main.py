@@ -47,6 +47,30 @@ def get_snipe_embed(ctx, index):
     embed.set_footer(text=f"Requested by {ctx.author.name}", icon_url=ctx.author.avatar.url if ctx.author.avatar else None)
     return embed
 
+def get_multiple_snipes(ctx, count):
+    channel_id = ctx.channel.id
+    if channel_id not in sniped_messages or len(sniped_messages[channel_id]) == 0:
+        return create_embed("❌ No deleted messages found.", ctx.author)
+
+    embed = discord.Embed(
+        title=f"🕵️ Last {count} Deleted Message(s)",
+        color=discord.Color.orange(),
+        timestamp=datetime.utcnow()
+    )
+
+    for i in range(min(count, len(sniped_messages[channel_id]))):
+        data = sniped_messages[channel_id][i]
+        embed.add_field(
+            name=f"#{i + 1} | {data['author']}",
+            value=f"```{data['content']}```\n"
+                  f"🕒 Sent: {data['sent_at'].strftime('%Y-%m-%d %H:%M:%S UTC')}\n"
+                  f"❌ Deleted: {data['deleted_at'].strftime('%Y-%m-%d %H:%M:%S UTC')}",
+            inline=False
+        )
+
+    embed.set_footer(text=f"Requested by {ctx.author.name}", icon_url=ctx.author.avatar.url if ctx.author.avatar else None)
+    return embed
+
 def has_bot_access(member):
     if access_enabled:
         return any(role.id in allowed_roles for role in member.roles)
@@ -211,47 +235,19 @@ async def permlist(ctx):
 
 # --------- Snipe & Purge Commands ---------
 @bot.command()
-async def snipe(ctx):
-    await ctx.send(embed=get_snipe_embed(ctx, 0), reference=ctx.message, mention_author=False)
+async def last1(ctx): await ctx.send(embed=get_multiple_snipes(ctx, 1), reference=ctx.message, mention_author=False)
 
 @bot.command()
-async def last1(ctx): await ctx.send(embed=get_snipe_embed(ctx, 0), reference=ctx.message, mention_author=False)
+async def last2(ctx): await ctx.send(embed=get_multiple_snipes(ctx, 2), reference=ctx.message, mention_author=False)
 
 @bot.command()
-async def last2(ctx): await ctx.send(embed=get_snipe_embed(ctx, 1), reference=ctx.message, mention_author=False)
+async def last3(ctx): await ctx.send(embed=get_multiple_snipes(ctx, 3), reference=ctx.message, mention_author=False)
 
 @bot.command()
-async def last3(ctx): await ctx.send(embed=get_snipe_embed(ctx, 2), reference=ctx.message, mention_author=False)
+async def last4(ctx): await ctx.send(embed=get_multiple_snipes(ctx, 4), reference=ctx.message, mention_author=False)
 
 @bot.command()
-async def last4(ctx): await ctx.send(embed=get_snipe_embed(ctx, 3), reference=ctx.message, mention_author=False)
-
-@bot.command()
-async def last5(ctx):
-    channel_id = ctx.channel.id
-    if channel_id not in sniped_messages or len(sniped_messages[channel_id]) == 0:
-        await ctx.send(embed=create_embed("❌ No deleted messages found.", ctx.author), reference=ctx.message, mention_author=False)
-        return
-    
-    # Create a combined embed with all last 5 deleted messages
-    embed = discord.Embed(
-        title="🕵️ Deleted Messages",
-        color=discord.Color.orange(),
-        timestamp=datetime.utcnow()
-    )
-    
-    for i in range(min(5, len(sniped_messages[channel_id]))):
-        data = sniped_messages[channel_id][i]
-        embed.add_field(
-            name=f"🕵️ Deleted Message #{i + 1}",
-            value=f"**{data['author']}** said:\n```{data['content']}```\n"
-                  f"🕒 Sent At: {data['sent_at'].strftime('%Y-%m-%d %H:%M:%S UTC')}\n"
-                  f"❌ Deleted At: {data['deleted_at'].strftime('%Y-%m-%d %H:%M:%S UTC')}",
-            inline=False
-        )
-    
-    embed.set_footer(text=f"Requested by {ctx.author.name}", icon_url=ctx.author.avatar.url if ctx.author.avatar else None)
-    await ctx.send(embed=embed, reference=ctx.message, mention_author=False)
+async def last5(ctx): await ctx.send(embed=get_multiple_snipes(ctx, 5), reference=ctx.message, mention_author=False)
 
 @bot.command()
 @commands.has_permissions(manage_messages=True)
