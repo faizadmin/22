@@ -32,7 +32,7 @@ def create_embed(text, author):
         color=discord.Color.blue(),
         timestamp=datetime.utcnow()
     )
-    embed.set_footer(text=f"{ist_time} | Requested by {author.name}", icon_url=author.avatar.url if author.avatar else None)
+    embed.set_footer(text=f" | Requested by {author.name}", icon_url=author.avatar.url if author.avatar else None)
     return embed
 
 def has_bot_access(member):
