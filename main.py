@@ -43,8 +43,10 @@ def get_snipe_embed(ctx, count):
     )
     for idx, data in enumerate(messages):
         embed.add_field(
-            name=f"Message #{idx + 1} from {data['author'].name}",
-            value=f"```{data['content']}```",
+            name=f"Deleted Message #{idx + 1}",
+            value=f"**{data['author'].name}** said:\n```{data['content']}```\n"
+                  f"Sent At: {data['sent_at'].strftime('%Y-%m-%d %H:%M:%S UTC')}\n"
+                  f"Deleted At: {data['deleted_at'].strftime('%Y-%m-%d %H:%M:%S UTC')}",
             inline=False
         )
         embed.set_footer(
