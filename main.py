@@ -169,7 +169,11 @@ async def pull(ctx, member: discord.Member = None):
     if not member or not member.voice:
         await ctx.send(embed=create_embed("❗ Mention a user who is in VC.", ctx.author), reference=ctx.message, mention_author=False)
         return
-    await member.move_to(ctx.author.voice.channel)
+    destination = ctx.author.voice.channel
+    if not destination.permissions_for(ctx.author).connect:
+        await ctx.send(embed=create_embed("❌ You do not have permission to join this VC.", ctx.author), reference=ctx.message, mention_author=False)
+        return
+    await member.move_to(destination)
     await ctx.send(embed=create_embed(f"✅ Moved {member.name} to your VC.", ctx.author), reference=ctx.message, mention_author=False)
 
 @bot.command()
@@ -182,6 +186,9 @@ async def move(ctx, member: discord.Member = None, vc_id: int = None):
         return
     vc = discord.utils.get(ctx.guild.voice_channels, id=vc_id)
     if vc:
+        if not vc.permissions_for(ctx.author).connect:
+            await ctx.send(embed=create_embed("❌ You do not have permission to join this VC.", ctx.author), reference=ctx.message, mention_author=False)
+            return
         await member.move_to(vc)
         await ctx.send(embed=create_embed(f"✅ Moved {member.name} to VC ID {vc_id}.", ctx.author), reference=ctx.message, mention_author=False)
     else:
@@ -197,8 +204,11 @@ async def moveall(ctx):
         return
 
     destination = ctx.author.voice.channel
-    moved = 0
+    if not destination.permissions_for(ctx.author).connect:
+        await ctx.send(embed=create_embed("❌ You do not have permission to join this VC.", ctx.author), reference=ctx.message, mention_author=False)
+        return
 
+    moved = 0
     for vc in ctx.guild.voice_channels:
         for member in vc.members:
             if member != ctx.author and member.voice:
