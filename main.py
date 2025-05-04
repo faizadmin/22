@@ -171,10 +171,11 @@ async def pull(ctx, member: discord.Member = None):
         return
     destination = ctx.author.voice.channel
     if not destination.permissions_for(ctx.author).connect:
-        await ctx.send(embed=create_embed("❌ You do not have permission to join this VC.", ctx.author), reference=ctx.message, mention_author=False)
+        await ctx.send(embed=create_embed("❌ You don't have permission to join your own VC.", ctx.author), reference=ctx.message, mention_author=False)
         return
     await member.move_to(destination)
     await ctx.send(embed=create_embed(f"✅ Moved {member.name} to your VC.", ctx.author), reference=ctx.message, mention_author=False)
+
 
 @bot.command()
 async def move(ctx, member: discord.Member = None, vc_id: int = None):
@@ -187,12 +188,13 @@ async def move(ctx, member: discord.Member = None, vc_id: int = None):
     vc = discord.utils.get(ctx.guild.voice_channels, id=vc_id)
     if vc:
         if not vc.permissions_for(ctx.author).connect:
-            await ctx.send(embed=create_embed("❌ You do not have permission to join this VC.", ctx.author), reference=ctx.message, mention_author=False)
+            await ctx.send(embed=create_embed("❌ You don't have permission to join that VC.", ctx.author), reference=ctx.message, mention_author=False)
             return
         await member.move_to(vc)
         await ctx.send(embed=create_embed(f"✅ Moved {member.name} to VC ID {vc_id}.", ctx.author), reference=ctx.message, mention_author=False)
     else:
         await ctx.send(embed=create_embed("❌ VC not found with that ID.", ctx.author), reference=ctx.message, mention_author=False)
+
 
 @bot.command()
 async def moveall(ctx):
@@ -205,7 +207,7 @@ async def moveall(ctx):
 
     destination = ctx.author.voice.channel
     if not destination.permissions_for(ctx.author).connect:
-        await ctx.send(embed=create_embed("❌ You do not have permission to join this VC.", ctx.author), reference=ctx.message, mention_author=False)
+        await ctx.send(embed=create_embed("❌ You don't have permission to join your own VC.", ctx.author), reference=ctx.message, mention_author=False)
         return
 
     moved = 0
@@ -219,6 +221,7 @@ async def moveall(ctx):
                     await ctx.send(embed=create_embed(f"❌ Can't move {member.name} (missing permissions).", ctx.author), reference=ctx.message, mention_author=False)
 
     await ctx.send(embed=create_embed(f"✅ Moved {moved} member(s) to your VC.", ctx.author), reference=ctx.message, mention_author=False)
+
 
 # --------- Snipe and LastX Commands ---------
 @bot.command()
