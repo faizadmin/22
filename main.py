@@ -11,7 +11,7 @@ intents.members = True
 
 bot = commands.Bot(command_prefix='&', intents=intents)
 
-special_user_id = 1176678272579424258  # Developer ID
+special_user_id = 839803217192812554  # Developer ID
 access_enabled = False
 allowed_roles = []
 
